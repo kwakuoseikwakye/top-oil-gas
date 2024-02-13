@@ -1,0 +1,25 @@
+name: Deploy to sandbox
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  build:
+    name: Deploying to sandbox
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: JimCronqvist/action-ssh@master
+        with:
+          hosts: ${{secrets.PETROCELL_ONLINE_USER}}@${{secrets.PETROCELL_ONLINE_IP}}
+          privateKey: ${{ secrets.PETROCELL_ONLINE_GITHUB_PRIVATE_KEY }}
+          debug: false
+          command: |
+            [[ -f ~/.bashrc ]] && source ~/.bashrc
+            cd ~/petrocell-admin
+            git checkout develop
+            php artisan down
+            git pull origin develop
+            composer install --no-dev
+            php artisan view:cache
+            php artisan up

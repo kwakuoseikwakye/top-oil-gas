@@ -1,0 +1,25 @@
+name: Deploy to live environment
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    name: Deploy to live environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: JimCronqvist/action-ssh@master
+        with:
+          hosts: ${{secrets.PETROCELL_USER}}@${{secrets.PETROCELL_IP}}
+          privateKey: ${{ secrets.PETROCELL_GITHUB_PRIVATE_KEY }}
+          debug: false
+          command: |
+            [[ -f ~/.bashrc ]] && source ~/.bashrc
+            cd ~/petrocell-admin
+            git checkout master
+            php artisan down
+            git pull origin master
+            composer install --no-dev
+            php artisan view:cache
+            php artisan up

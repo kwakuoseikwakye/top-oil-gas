@@ -1,0 +1,27 @@
+{"beautify.language": {
+    "js": {
+        "type": [
+            "javascript",
+            "json",
+            "jsonc"
+        ],
+        "filename": [
+            "jshintrc",
+            "jsbeautifyrc",
+            
+        ]
+    },
+    "css" : [
+        "css",
+        "scss"
+    ],
+    "html": [
+        "html",
+        "htm",
+        "blade"
+    ]
+},
+"[blade]":{
+    "editor.defaultFormatter": "HookyQR.beautify"
+}
+}
