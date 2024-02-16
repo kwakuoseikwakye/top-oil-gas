@@ -2,7 +2,7 @@
     <x-auth-card>
         <x-slot name="logo">
             <a href="/">
-                <img src="{{asset("img/petro.png")}}" style="width: 300px; height:100px;" alt="">
+                <img src="{{asset("img/petro.png")}}" style="width: 100px; height:100px;" alt="">
             </a>
         </x-slot>
 
@@ -11,7 +11,7 @@
 
         <!-- Validation Errors -->
         <x-auth-validation-errors class="mb-4" :errors="$errors" />
-        <p class="text-center" style="font-size: 30px"><strong>Petrocell Admin Login</strong></p><hr><br>
+        <p class="text-center" style="font-size: 30px"><strong>Top Oil Admin Login</strong></p><hr><br>
         <form method="POST" action="{{ route('login') }}">
             @csrf
 

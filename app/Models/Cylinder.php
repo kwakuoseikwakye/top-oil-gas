@@ -18,7 +18,7 @@ class Cylinder extends Model
 
     protected $fillable = [
         "transid", "barcode", "owner", "cylcode", "size","notes",
-        "weight", "initial_amount", "images", "deleted", "createdate",
+        "weight_id", "initial_amount", "images", "deleted", "createdate",
         "createuser", "modifydate", "modifyuser",
     ];
 

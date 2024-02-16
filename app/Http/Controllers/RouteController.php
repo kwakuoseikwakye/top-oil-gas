@@ -132,10 +132,10 @@ class RouteController extends Controller
 
     public function customers()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customer = DB::table("tblcustomer")->where("deleted",0)->get();
-        $size = DB::table("tblcylinder_size")->where("deleted",0)->get();
-        $vendors = DB::table("tblvendor")->where("deleted",0)->get();
+        $cylinders = DB::table("tblcylinder")->get();
+        $customer = DB::table("tblcustomer")->get();
+        $size = DB::table("tblcylinder_size")->get();
+        $vendors = DB::table("tblvendor")->get();
         return view('modules.customer.index',[
             "cylinder" => $cylinders,
             "size" => $size,
@@ -161,10 +161,12 @@ class RouteController extends Controller
         $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
         $customer = DB::table("tblcustomer")->where("deleted",0)->get();
         $vendor = DB::table("tblvendor")->where("deleted",0)->get();
+        $weights = DB::table("tblcylinder_size")->get();
         return view('modules.cylinder.index',
         [
             "cylinder" => $cylinders,
             "vendor" => $vendor,
+            "weights" => $weights,
             "customer" => $customer,]
         );
     }

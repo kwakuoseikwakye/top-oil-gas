@@ -50,9 +50,11 @@ Route::prefix("v1")->group(function () {
     Route::post("upload_cylinder", [ImageController::class, "uploadCylinder"]);
 
     // Every other route requires authentication
-    // Route::group(["middleware" => "auth:sanctum"], function () {
+    Route::group(["middleware" => "auth:sanctum"], function () {
+        Route::post("/logout", [AuthenticationController::class, "logout"]);
+
+    });
     // Clients of this API must log out via this route so we can invalidate their access tokens
-    Route::post("/logout", [AuthenticationController::class, "logout"]);
     Route::post("password_reset", [AuthenticationController::class, "passwordReset"]);
     Route::post("logs", [AuthenticationController::class, "logs"]);
     Route::post("logs/{userid}/{dateFrom}/{dateTo}", [AuthenticationController::class, "logReport"]);
@@ -112,6 +114,7 @@ Route::prefix("v1")->group(function () {
     Route::resource("employees", MobileEmployeeController::class);
 
     Route::prefix("cylinders")->group(function () {
+        Route::get("weight", [MobileCylinderController::class, "fetchCylinderWeight"]);
         Route::get("conditions", [MobileCylinderController::class, "cylinderConditions"]);
         Route::get("owners", [MobileCylinderController::class, "cylinderOwner"]);
         Route::get("payment_modes", [MobileCylinderController::class, "paymentMode"]);
