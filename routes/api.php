@@ -44,6 +44,7 @@ Route::prefix("v1")->group(function () {
     Route::post("login", [AuthenticationController::class, "login"]);
     Route::post("signup", [AuthenticationController::class, "signUp"]);
     Route::post('verify-otp', [AuthenticationController::class, 'verifyOtp']);
+    Route::post('resend-otp', [AuthenticationController::class, 'resendOtp']);
 
     // Upload a user's profile picture
     Route::post("upload_picture", [ImageController::class, "uploadProfilePicture"]);
@@ -54,7 +55,7 @@ Route::prefix("v1")->group(function () {
     Route::group(["middleware" => "auth:sanctum"], function () {
         Route::post("/logout", [AuthenticationController::class, "logout"]);
     });
-    
+
     // Clients of this API must log out via this route so we can invalidate their access tokens
     Route::post("password_reset", [AuthenticationController::class, "passwordReset"]);
     Route::post("logs", [AuthenticationController::class, "logs"]);

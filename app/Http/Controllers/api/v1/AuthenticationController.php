@@ -130,7 +130,7 @@ class AuthenticationController extends Controller
             DB::commit();
 
             $otp = rand(100000, 999999);
-            Cache::put('otp_'.$request->phone, $otp, 600);
+            Cache::put('otp_' . $request->phone, $otp, 60);
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -159,11 +159,17 @@ class AuthenticationController extends Controller
 
     public function verifyOtp(Request $request)
     {
-        $request->validate([
-            'phone' => 'required|numeric',
-            'otp' => 'required|numeric',
+        $validator = Validator::make($request->all(), [
+            "phone" => "required|numeric",
+            "otp" => "required|numeric",
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => false,
+                "message" => "Sending otp failed. " . join(". ", $validator->errors()->all()),
+            ], 422);
+        }
         // Retrieve OTP from cache or wherever it was stored
         $cachedOtp = Cache::get('otp_' . $request->phone);
 
@@ -183,6 +189,50 @@ class AuthenticationController extends Controller
                 "message" => "Invalid OTP provided.",
             ], 401);
         }
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "phone" => "required|numeric",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => false,
+                "message" => "Sending otp failed. " . join(". ", $validator->errors()->all()),
+            ], 422);
+        }
+
+        // Retrieve the existing OTP from cache
+        $otp = Cache::get('otp_' . $request->phone);
+
+        if (!$otp) {
+            // If there's no OTP, you might want to generate a new one or return an error
+            $otp = rand(100000, 999999);
+            Cache::put('otp_' . $request->phone, $otp, 60);
+
+            $msg = <<<MSG
+            Your registration OTP code is {$otp}
+            MSG;
+
+            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            $sms->send($request->phone, $msg);
+        } else {
+            Cache::put('otp_' . $request->phone, $otp, 60);
+
+            $msg = <<<MSG
+            Your registration OTP code is {$otp}
+            MSG;
+
+            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            $sms->send($request->phone, $msg);
+        }
+
+        return response()->json([
+            "status" => true,
+            "message" => "OTP has been resent successfully.",
+        ], 200);
     }
 
 
