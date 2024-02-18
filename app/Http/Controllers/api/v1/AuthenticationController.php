@@ -14,10 +14,18 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Stevebauman\Location\Facades\Location;
+use App\Arkesel\Arkesel as Sms;
+use Illuminate\Support\Facades\Cache;
 
 class AuthenticationController extends Controller
 {
     const ALLOWED_USER_TYPES = ["vendor", "warehouse", "admin", "customer"];
+
+    // The number of seconds to wait for OTP to be verified
+    const VERIFICATION_WAITING_TIME = 300;
+
+    // The allowed length of the OTP
+    const ALLOWED_OTP_LENGTH = 6;
 
     public function signUp(Request $request)
     {
@@ -28,15 +36,8 @@ class AuthenticationController extends Controller
                 "phone" => "required|numeric|unique:tblcustomer,phone",
                 // "email" => "required|email|unique:tbluser,email",
                 "password" => "required|min:8",
-                // "username" => "unique:tblvendor,username",
                 "id_type" => "required",
                 "id_no" => "required",
-                // "idFileLink" => "required",
-                // "region" => "required",
-                // "town" => "required",
-                // "streetName" => "required",
-                // "landmark" => "required",
-                "gpsaddress" => "required",
             ], [
                 // This has our own custom error messages for each validation
                 "fname.required" => "No first name supplied",
@@ -68,13 +69,6 @@ class AuthenticationController extends Controller
                 "id_no.required" => "ID number is required",
                 "id_link.required" => "Upload ID",
 
-                // Address error messages
-                //  "region.required" => "Region is required",
-                //  "town.required" => "Town is required",
-                //  "streetname.required" => "Streetname is required",
-                //  "landmark.required" => "Landmark is required",
-                "gpsaddress.required" => "GPS Address is required",
-
                 // Password error messages
                 "password.required" => "No password supplied",
                 // "password.confirm" => "Your passwords do not match",
@@ -83,8 +77,8 @@ class AuthenticationController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    "ok" => false,
-                    "msg" => "Registration failed. " . join(". ", $validator->errors()->all()),
+                    "status" => false,
+                    "message" => "Registration failed. " . join(". ", $validator->errors()->all()),
                 ], 422);
             }
 
@@ -106,34 +100,6 @@ class AuthenticationController extends Controller
                 "createuser" =>  $request->createuser,
             ]);
 
-            // DB::table('tblvendor')->insert([
-            //     "transid" => $transid,
-            //     "vendor_no" => 'VND-' . $transid,
-            //     "fname" => strtoupper($request->firstName),
-            //     "lname" => strtoupper($request->lastName),
-            //     "mname" => strtoupper($request->middleName),
-            //     "phone" => $request->phoneNumber,
-            //     "username" => $request->username,
-            //     "email" => $request->email,
-            //     "region" => $request->region,
-            //     "town" => $request->town,
-            //     "streetname" => $request->streetName,
-            //     "landmark" => $request->landmark,
-            //     "gpsaddress" => $request->gpsaddress,
-            //     "longitude" => $request->longitude,
-            //     "latitude" => $request->latitude,
-            //     "gender" => strtoupper($request->gender),
-            //     "dob" => $request->dateOfBirth,
-            //     "picture" => $request->picture,
-            //     "id_type" => $request->idType,
-            //     "id_no" => $request->idNumber,
-            //     "id_file_link" => $request->idFileLink,
-            //     "createdate" =>  date('Y-m-d H:i:s'),
-            //     "createuser" => $request->createuser,
-            //     "deleted" => 0,
-            //     "approved" => 0,
-            // ]);
-
             $custno = 'CUST-' . $transid;
             Customer::create($validator->validated() + ['custno' => $custno]);
 
@@ -143,7 +109,7 @@ class AuthenticationController extends Controller
                     "id_link" => env("APP_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
-            
+
             $userIp = $request->ip();
             $locationData = Location::get($userIp);
             $transid1 = strtoupper(bin2hex(random_bytes(4)));
@@ -163,9 +129,18 @@ class AuthenticationController extends Controller
 
             DB::commit();
 
+            $otp = rand(100000, 999999);
+            Cache::put('otp_'.$request->phone, $otp, 600);
+
+            $msg = <<<MSG
+            Your registration OTP code is {$otp}
+            MSG;
+
+            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            $sms->send($request->phone, $msg);
             return response()->json([
-                "ok" => true,
-                "msg" => "Registration successful",
+                "status" => true,
+                "message" => "Registration successful",
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -175,12 +150,41 @@ class AuthenticationController extends Controller
             ]);
 
             return response()->json([
-                "ok" => false,
-                "msg" => "Request failed. An internal error occured",
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
                 "errMsg" => $e->getMessage(),
             ]);
         }
     }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|numeric',
+            'otp' => 'required|numeric',
+        ]);
+
+        // Retrieve OTP from cache or wherever it was stored
+        $cachedOtp = Cache::get('otp_' . $request->phone);
+
+        if ($cachedOtp && $cachedOtp == $request->otp) {
+            // OTP is correct, proceed with user activation or any further steps
+
+            // Optionally, remove the OTP from cache after successful verification
+            Cache::forget('otp_' . $request->phone);
+
+            return response()->json([
+                "status" => true,
+                "message" => "OTP verification successful.",
+            ], 200);
+        } else {
+            return response()->json([
+                "status" => false,
+                "message" => "Invalid OTP provided.",
+            ], 401);
+        }
+    }
+
 
     public function login(Request $request)
     {
@@ -199,15 +203,15 @@ class AuthenticationController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    "ok" => false,
-                    "msg" => "Login failed. " . join(". ", $validator->errors()->all()),
+                    "status" => false,
+                    "message" => "Login failed. " . join(". ", $validator->errors()->all()),
                 ], 422);
             }
 
             if (!Auth::attempt($request->only(["phone", "password"]))) {
                 return response()->json([
-                    "ok" => false,
-                    "msg" => "Login failed. Invalid credentials",
+                    "status" => false,
+                    "message" => "Login failed. Invalid credentials",
                 ], 418);
             }
 
@@ -216,16 +220,16 @@ class AuthenticationController extends Controller
             // No admin can login via the mobile
             if (!in_array(strtolower($user->usertype), self::ALLOWED_USER_TYPES)) {
                 return response()->json([
-                    "ok" => false,
-                    "msg" => "You cannot log in using the mobile client",
+                    "status" => false,
+                    "message" => "You cannot log in using the mobile client",
                 ], 418);
             }
 
             // Make sure account has been approved
             // if ($user->others->approved == 1) {
             //     return response()->json([
-            //         "ok" => false,
-            //         "msg" => "Your account has not been approved. Kindly contact admin",
+            //         "status" => false,
+            //         "message" => "Your account has not been approved. Kindly contact admin",
             //     ]);
             // }
 
@@ -253,7 +257,7 @@ class AuthenticationController extends Controller
 
             return response()->json([
                 "ok" => true,
-                "msg" => "Login successful",
+                "message" => "Login successful",
                 "data" => [
                     "accessToken" => $token,
                     "user" => $user,
@@ -262,12 +266,12 @@ class AuthenticationController extends Controller
         } catch (\Throwable $e) {
             Log::error("Logging in failed", [
                 "request" => $request->all(),
-                "msg" => $e->getMessage(),
+                "message" => $e->getMessage(),
                 "trace" => $e->getTrace(),
             ]);
             return response()->json([
-                "ok" => false,
-                "msg" => "An internal error occured",
+                "status" => false,
+                "message" => "An internal error occured",
                 "trace" => $e->getTrace(),
             ], 500);
         }
@@ -278,15 +282,15 @@ class AuthenticationController extends Controller
         if ($request->user()) {
             $request->user()->currentAccessToken()->delete();
             return response()->json([
-                "ok" => true,
-                "msg" => "Logout successful.",
+                "status" => true,
+                "message" => "Logout successful.",
             ]);
         }
 
         // If the user is not authenticated, return an unauthorized error response
         return response()->json([
-            "ok" => false,
-            "msg" => "No authenticated user found.",
+            "status" => false,
+            "message" => "No authenticated user found.",
         ], 401);
     }
 
@@ -318,8 +322,8 @@ class AuthenticationController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                "ok" => false,
-                "msg" => "Reset failed. " . join(" ", $validator->errors()->all()),
+                "status" => false,
+                "message" => "Reset failed. " . join(" ", $validator->errors()->all()),
             ]);
         }
 
@@ -330,15 +334,15 @@ class AuthenticationController extends Controller
         // Return if user not found
         if (empty($authenticatedUser)) {
             return response()->json([
-                "ok" => false,
-                "msg" => "Unknown user",
+                "status" => false,
+                "message" => "Unknown user",
             ]);
         }
 
         if ($authenticatedUser->others->approved == 1) {
             return response()->json([
-                "ok" => false,
-                "msg" => "This account has not been approved",
+                "status" => false,
+                "message" => "This account has not been approved",
             ]);
         }
 
@@ -346,8 +350,8 @@ class AuthenticationController extends Controller
         if (!Hash::check($request->current_password, $authenticatedUser->password)) {
             $payload["msg"] = "Sorry your current password is incorrect";
             return response()->json([
-                "ok" => false,
-                "msg" => "Incorrect password",
+                "status" => false,
+                "message" => "Incorrect password",
             ]);
         }
 
@@ -381,7 +385,7 @@ class AuthenticationController extends Controller
 
             return response()->json([
                 "ok" => true,
-                "msg" => "Password successfully changed",
+                "message" => "Password successfully changed",
             ]);
         } catch (\Exception $th) {
             Log::error(
@@ -391,8 +395,8 @@ class AuthenticationController extends Controller
                 ]
             );
             return response()->json([
-                "ok" => false,
-                "msg" => "An internal error occured. Reset failed",
+                "status" => false,
+                "message" => "An internal error occured. Reset failed",
             ]);
         }
     }
