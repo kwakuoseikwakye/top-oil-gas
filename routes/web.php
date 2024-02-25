@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\OTPController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,10 @@ Route::post("/otp/verify", [OTPController::class, "verifyOTP"]);
 Route::get("/confirm_otp", function () {
     return view("modules.otp.index");
 })->name("confirm_otp");
+
+Route::get('/foo', function () {
+    Artisan::call('storage:link');
+});
 
 Route::get('/logout', function () {
     Auth::logout();

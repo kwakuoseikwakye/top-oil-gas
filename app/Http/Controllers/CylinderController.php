@@ -23,9 +23,12 @@ class CylinderController extends Controller
 
     public function index()
     {
+        // return response()->json([
+        //     'data' => CylinderResource::collection(Cylinder::where("deleted", 0)
+        //         ->orderBy("createdate", "DESC")->get()),
+        // ]);
         return response()->json([
-            'data' => CylinderResource::collection(Cylinder::where("deleted", 0)
-                ->orderBy("createdate", "DESC")->get()),
+            'data' => CylinderResource::collection(Cylinder::all()),
         ]);
     }
 
@@ -209,7 +212,7 @@ class CylinderController extends Controller
 
             return response()->json([
                 "ok" => true,
-                "msg" => "Culinder updated successfully",
+                "msg" => "Cylinder updated successfully",
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -221,6 +224,8 @@ class CylinderController extends Controller
             return response()->json([
                 "ok" => false,
                 "msg" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
             ]);
         }
     }

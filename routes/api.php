@@ -43,6 +43,9 @@ Route::prefix("v1")->group(function () {
     // Login and registraion routes do not require authentication
     Route::post("login", [AuthenticationController::class, "login"]);
     Route::post("signup", [AuthenticationController::class, "signUp"]);
+    Route::post('verify-otp', [AuthenticationController::class, 'verifyOtp']);
+    Route::post('resend-otp', [AuthenticationController::class, 'resendOtp']);
+    Route::post('send-otp', [AuthenticationController::class, 'sendOtp']);
 
     // Upload a user's profile picture
     Route::post("upload_picture", [ImageController::class, "uploadProfilePicture"]);
@@ -50,10 +53,13 @@ Route::prefix("v1")->group(function () {
     Route::post("upload_cylinder", [ImageController::class, "uploadCylinder"]);
 
     // Every other route requires authentication
-    // Route::group(["middleware" => "auth:sanctum"], function () {
+    Route::group(["middleware" => "auth:sanctum"], function () {
+        Route::post("/logout", [AuthenticationController::class, "logout"]);
+    });
+
     // Clients of this API must log out via this route so we can invalidate their access tokens
-    Route::post("/logout", [AuthenticationController::class, "logout"]);
-    Route::post("password_reset", [AuthenticationController::class, "passwordReset"]);
+    Route::post("password-change", [AuthenticationController::class, "changePassword"]);
+    Route::post("password-reset", [AuthenticationController::class, "passwordReset"]);
     Route::post("logs", [AuthenticationController::class, "logs"]);
     Route::post("logs/{userid}/{dateFrom}/{dateTo}", [AuthenticationController::class, "logReport"]);
 
@@ -112,6 +118,7 @@ Route::prefix("v1")->group(function () {
     Route::resource("employees", MobileEmployeeController::class);
 
     Route::prefix("cylinders")->group(function () {
+        Route::get("weight", [MobileCylinderController::class, "fetchCylinderWeight"]);
         Route::get("conditions", [MobileCylinderController::class, "cylinderConditions"]);
         Route::get("owners", [MobileCylinderController::class, "cylinderOwner"]);
         Route::get("payment_modes", [MobileCylinderController::class, "paymentMode"]);

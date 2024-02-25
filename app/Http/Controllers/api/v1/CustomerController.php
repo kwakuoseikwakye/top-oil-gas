@@ -13,22 +13,49 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Stevebauman\Location\Facades\Location;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    protected function extractToken(Request $request)
+    {
+        $authorizationHeader = $request->header('Authorization');
+        if (Str::startsWith($authorizationHeader, 'Bearer ')) {
+            return Str::substr($authorizationHeader, 7);
+        }
+        return null;
+    }
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Return all customers and their cylinders assigned to them with each cylinder's status
-        return response()->json([
-            'ok' => true,
-            'msg' => 'Request successful',
-            'data' => Customer::where("deleted", 0)->with('cylinders', 'user')->orderBy("createdate", "DESC")->get(),
-        ]);
+        $token = $this->extractToken($request);
+
+        if ($token) {
+            $user = User::where('remember_token', $token)->first();
+
+            if ($user) {
+                $cust = Customer::where('tblcustomer.custno', $user->userid)->get();
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Request Successful',
+                    'data' => $cust
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - User not found'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
     }
 
     public function trash()
