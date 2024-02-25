@@ -45,6 +45,7 @@ Route::prefix("v1")->group(function () {
     Route::post("signup", [AuthenticationController::class, "signUp"]);
     Route::post('verify-otp', [AuthenticationController::class, 'verifyOtp']);
     Route::post('resend-otp', [AuthenticationController::class, 'resendOtp']);
+    Route::post('send-otp', [AuthenticationController::class, 'sendOtp']);
 
     // Upload a user's profile picture
     Route::post("upload_picture", [ImageController::class, "uploadProfilePicture"]);
@@ -57,7 +58,8 @@ Route::prefix("v1")->group(function () {
     });
 
     // Clients of this API must log out via this route so we can invalidate their access tokens
-    Route::post("password_reset", [AuthenticationController::class, "passwordReset"]);
+    Route::post("password-change", [AuthenticationController::class, "changePassword"]);
+    Route::post("password-reset", [AuthenticationController::class, "passwordReset"]);
     Route::post("logs", [AuthenticationController::class, "logs"]);
     Route::post("logs/{userid}/{dateFrom}/{dateTo}", [AuthenticationController::class, "logReport"]);
 

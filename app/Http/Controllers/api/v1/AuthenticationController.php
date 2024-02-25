@@ -104,11 +104,15 @@ class AuthenticationController extends Controller
             Customer::create($validator->validated() + ['custno' => $custno]);
 
             if (null !== $request->file("id_link")) {
-                $filePath = $request->file("id_link")->store("public/student");
+                $filePath = $request->file("id_link")->store("public/customer");
                 Customer::where("custno", $custno)->update([
                     "id_link" => env("APP_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
+
+            // $user = User::select('tblcustomer.*', 'tbluser.*')
+            //     ->join('tblcustomer', 'tblcustomer.custno', 'tbluser.userid')
+            //     ->where('tbluser.phone', $request->phone)->first();
 
             $userIp = $request->ip();
             $locationData = Location::get($userIp);
@@ -176,6 +180,7 @@ class AuthenticationController extends Controller
         if ($cachedOtp && $cachedOtp == $request->otp) {
             // OTP is correct, proceed with user activation or any further steps
 
+            User::where('phone', $request->phone)->update(['verified' => 1]);
             // Optionally, remove the OTP from cache after successful verification
             Cache::forget('otp_' . $request->phone);
 
@@ -236,6 +241,48 @@ class AuthenticationController extends Controller
     }
 
 
+    public function sendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "phone" => "required|numeric",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => false,
+                "message" => "Sending otp failed. " . join(". ", $validator->errors()->all()),
+            ], 422);
+        }
+
+        Cache::forget('otp_' . $request->phone);
+
+        $authenticatedUser = User::where("phone", $request->phone)
+            ->first();
+
+        if (empty($authenticatedUser)) {
+            return response()->json([
+                "status" => false,
+                "message" => "This user does not exist",
+            ], 418);
+        }
+
+        $otp = rand(100000, 999999);
+        Cache::put('otp_' . $request->phone, $otp, 60);
+
+        $msg = <<<MSG
+            Your OTP code is {$otp}
+            MSG;
+
+        $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+        $sms->send($request->phone, $msg);
+
+        return response()->json([
+            "status" => true,
+            "message" => "OTP sent successfully.",
+        ], 200);
+    }
+
+
     public function login(Request $request)
     {
         try {
@@ -288,6 +335,10 @@ class AuthenticationController extends Controller
                 'remember_token' => $token
             ]);
 
+            $users = User::select('tblcustomer.*', 'tbluser.*')
+                ->join('tblcustomer', 'tblcustomer.custno', 'tbluser.userid')
+                ->where('tbluser.phone', $request->phone)->first();
+
             $userIp = $request->ip();
             $locationData = Location::get($userIp);
             $transid1 = strtoupper(bin2hex(random_bytes(4)));
@@ -306,11 +357,11 @@ class AuthenticationController extends Controller
             ]);
 
             return response()->json([
-                "ok" => true,
+                "status" => true,
                 "message" => "Login successful",
                 "data" => [
                     "accessToken" => $token,
-                    "user" => $user,
+                    "user" => $users,
                 ]
             ]);
         } catch (\Throwable $e) {
@@ -348,24 +399,23 @@ class AuthenticationController extends Controller
     /**
      * Allows user to change their password
      */
-    public function passwordReset(Request $request)
+    public function changePassword(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                "password" => "required|confirmed|min:8",
+                "password" => "required|min:8",
                 "current_password" => "required",
-                "email" => "required|email|exists:tbluser,email",
+                "phone" => "required|numeric|exists:tbluser,phone",
             ],
             [
                 "password.required" => "You have to supply your new password",
-                "password.confirmed" => "Your passwords do not match",
                 "password.min" => "Your new password must be at least 8 characters long",
 
                 "current_password.required" => "You have to supply your current password",
-                "email.required" => "No email supplied",
-                "email.exists" => "Unknown email supplied",
-                "email.email" => "The email you supplied is invalid",
+                "phone.required" => "No phone number supplied",
+                "phone.exists" => "Unknown phone number supplied",
+                "phone.numeric" => "The phone number you supplied is invalid",
             ]
         );
 
@@ -374,11 +424,10 @@ class AuthenticationController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Reset failed. " . join(" ", $validator->errors()->all()),
-            ]);
+            ], 422);
         }
 
-        $authenticatedUser = User::where("email", $request->email)
-            ->where("deleted", 0)
+        $authenticatedUser = User::where("phone", $request->phone)
             ->first();
 
         // Return if user not found
@@ -386,14 +435,7 @@ class AuthenticationController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Unknown user",
-            ]);
-        }
-
-        if ($authenticatedUser->others->approved == 1) {
-            return response()->json([
-                "status" => false,
-                "message" => "This account has not been approved",
-            ]);
+            ], 418);
         }
 
         // Return if current password is invalid
@@ -402,7 +444,7 @@ class AuthenticationController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Incorrect password",
-            ]);
+            ], 418);
         }
 
         //create new password
@@ -434,7 +476,7 @@ class AuthenticationController extends Controller
             ]);
 
             return response()->json([
-                "ok" => true,
+                "status" => true,
                 "message" => "Password successfully changed",
             ]);
         } catch (\Exception $th) {
@@ -447,7 +489,99 @@ class AuthenticationController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "An internal error occured. Reset failed",
+            ], 500);
+        }
+    }
+
+    public function passwordReset(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "password" => "required|min:8",
+                "otp" => "required|min:6",
+                "phone" => "required|numeric|exists:tbluser,phone",
+            ],
+            [
+                "password.required" => "You have to supply your new password",
+                "password.min" => "Your new password must be at least 8 characters long",
+                "otp.min" => "otp must be at least 6 characters long",
+
+                "phone.required" => "No phone number supplied",
+                "phone.exists" => "Unknown phone number supplied",
+                "phone.numeric" => "The phone number you supplied is invalid",
+            ]
+        );
+
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => false,
+                "message" => "Reset failed. " . join(" ", $validator->errors()->all()),
+            ], 422);
+        }
+
+        $authenticatedUser = User::where("phone", $request->phone)
+            ->first();
+
+        // Return if user not found
+        if (empty($authenticatedUser)) {
+            return response()->json([
+                "status" => false,
+                "message" => "Unknown user",
+            ], 418);
+        }
+
+        $this->verifyOtp($request);
+        //create new password
+        $password = Hash::make($request->password);
+
+        //update new password with the authenticated user
+        try {
+            $authenticatedUser->update([
+                'password' => $password,
+                'modifydate' => date("Y-m-d H:i:s"),
             ]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $authenticatedUser->username,
+                "module" => "Vendor",
+                "action" => "Password Reset",
+                "activity" => "{$authenticatedUser->username} changed password",
+                "ipaddress" => $userIp,
+                "createuser" =>  $authenticatedUser->username,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            $msg = <<<MSG
+            Your password has been reset. If you did not initiate this action, please contact support.
+            MSG;
+
+            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            $sms->send($request->phone, $msg);
+
+            return response()->json([
+                "status" => true,
+                "message" => "Password reset successfully",
+            ]);
+        } catch (\Exception $th) {
+            Log::error(
+                "Error changing password: " . $th->getMessage(),
+                [
+                    "request" => $request->all(),
+                ]
+            );
+            return response()->json([
+                "status" => false,
+                "message" => "An internal error occured. Reset failed",
+            ], 500);
         }
     }
 
