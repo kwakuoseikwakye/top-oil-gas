@@ -18,7 +18,7 @@
                         <div class="col">
                             <label for="">Owner<span class="text-danger">*</span></label>
                             <select name="owner" class="form-control select2" id="update-cylinder-owner" required>
-                                <option value="Petrocell">Petrocell</option>
+                                <option value="Topoil">Topoil</option>
                                 <option value="Customer">Customer</option>
                             </select>
                         </div>
@@ -45,8 +45,11 @@
                         </div>
                         <div class="col">
                             <label for="">Weight</label>
-                            <input name="weight" type="number" step="0.2" class="form-control" id="update-cylinder-weight">
-
+                            <select name="weight" id="update-cylinder-weight" class="form-control select2">
+                                @foreach ($weights as $item)
+                                <option value="{{$item->id}}">{{$item->weight}} - GHS {{$item->amount}}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 

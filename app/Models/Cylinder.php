@@ -18,8 +18,8 @@ class Cylinder extends Model
 
     protected $fillable = [
         "transid", "barcode", "owner", "cylcode", "size","notes",
-        "weight", "initial_amount", "images", "deleted", "createdate",
-        "createuser", "modifydate", "modifyuser",
+        "weight_id", "initial_amount", "images", "deleted", "createdate",
+        "createuser", "modifydate", "modifyuser","location_id"
     ];
 
     protected $casts = [
@@ -34,5 +34,15 @@ class Cylinder extends Model
     public function user()
     {
         return $this->belongsTo(User::class, "createuser", "createuser");
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(CustomerLocation::class, 'location_id');
+    }
+
+    public function cylinderWeight()
+    {
+        return $this->belongsTo(CylinderSize::class, 'weight_id','id');
     }
 }

@@ -18,8 +18,8 @@ class CustomerCylinder extends Model
 
     protected $fillable = [
         "transid", "custno", "cylcode", "barcode", "date_acquired",
-        "vendor_no", "status", "deleted", "createdate",
-        "createuser", "modifydate", "modifyuser",
+        "vendor_no", "status", "deleted", "createdate","location_id",
+        "createuser", "modifydate", "modifyuser","weight_id","order_id"
     ];
 
     public function customer()

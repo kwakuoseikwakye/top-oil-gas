@@ -10,6 +10,7 @@ use App\Http\Controllers\api\v1\CylinderController as MobileCylinderController;
 use App\Http\Controllers\api\v1\VendorController as MobileVendorController;
 use App\Http\Controllers\api\v1\DashboardController as MobileDashboardController;
 use App\Http\Controllers\api\v1\EmployeeController as MobileEmployeeController;
+use App\Http\Controllers\api\v1\PaymentController as V1PaymentController;
 use App\Http\Controllers\api\v1\WarehouseController as MobileWarehouseController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
@@ -39,10 +40,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+/**
+ * MOBILE API ROUTE
+ */
 Route::prefix("v1")->group(function () {
     // Login and registraion routes do not require authentication
     Route::post("login", [AuthenticationController::class, "login"]);
     Route::post("signup", [AuthenticationController::class, "signUp"]);
+    Route::post('verify-otp', [AuthenticationController::class, 'verifyOtp']);
+    Route::post('resend-otp', [AuthenticationController::class, 'resendOtp']);
+    Route::post('send-otp', [AuthenticationController::class, 'sendOtp']);
 
     // Upload a user's profile picture
     Route::post("upload_picture", [ImageController::class, "uploadProfilePicture"]);
@@ -50,10 +57,13 @@ Route::prefix("v1")->group(function () {
     Route::post("upload_cylinder", [ImageController::class, "uploadCylinder"]);
 
     // Every other route requires authentication
-    // Route::group(["middleware" => "auth:sanctum"], function () {
+    Route::group(["middleware" => "auth:sanctum"], function () {
+        Route::post("/logout", [AuthenticationController::class, "logout"]);
+    });
+
     // Clients of this API must log out via this route so we can invalidate their access tokens
-    Route::post("/logout", [AuthenticationController::class, "logout"]);
-    Route::post("password_reset", [AuthenticationController::class, "passwordReset"]);
+    Route::post("password-change", [AuthenticationController::class, "changePassword"]);
+    Route::post("password-reset", [AuthenticationController::class, "passwordReset"]);
     Route::post("logs", [AuthenticationController::class, "logs"]);
     Route::post("logs/{userid}/{dateFrom}/{dateTo}", [AuthenticationController::class, "logReport"]);
 
@@ -62,8 +72,22 @@ Route::prefix("v1")->group(function () {
     });
     Route::resource("dashboard", MobileDashboardController::class);
 
+    //payment route
+    Route::prefix("payments")->group(function () {
+        Route::post("initiate", [V1PaymentController::class, "initiatePayment"]);
+    });
     // Customers 
     Route::prefix("customers")->group(function () {
+        Route::get("get_pickup", [MobileCustomerController::class, "getPickupStations"]);
+        Route::get("get_orders", [MobileCustomerController::class, "getOrders"]);
+        Route::post("add_orders", [MobileCustomerController::class, "addOrders"]);
+        Route::post("bulk_order", [MobileCustomerController::class, "bulkOrder"]);
+        Route::post("purchase_now", [MobileCustomerController::class, "purchaseNow"]);
+        Route::post("add_location", [MobileCustomerController::class, "addLocation"]);
+        Route::post("update_location/{locationId}", [MobileCustomerController::class, "updateLocation"]);
+        Route::delete("delete_location/{locationId}", [MobileCustomerController::class, "deleteLocation"]);
+        Route::get("get_location", [MobileCustomerController::class, "getLocation"]);
+        Route::post("add_cart", [MobileCustomerController::class, "addCart"]);
         Route::post("update", [MobileCustomerController::class, "update"]);
         Route::get("trash", [MobileCustomerController::class, "trash"]);
         Route::post("restore", [MobileCustomerController::class, "restore"]);
@@ -112,13 +136,16 @@ Route::prefix("v1")->group(function () {
     Route::resource("employees", MobileEmployeeController::class);
 
     Route::prefix("cylinders")->group(function () {
+        Route::post("assign_cylinder", [MobileCylinderController::class, "assignSingleCylinder"]);
+        Route::post("assign_bulk_cylinder", [MobileCylinderController::class, "assignBulkCylinder"]);
+        Route::post("refill_cylinder", [MobileCylinderController::class, "refillCylinder"]);
+        Route::get("weight", [MobileCylinderController::class, "fetchCylinderWeight"]);
         Route::get("conditions", [MobileCylinderController::class, "cylinderConditions"]);
         Route::get("owners", [MobileCylinderController::class, "cylinderOwner"]);
         Route::get("payment_modes", [MobileCylinderController::class, "paymentMode"]);
         Route::get("{seachType}/{keyword}", [MobileCylinderController::class, "search"]);
         Route::post("exchange", [MobileCylinderController::class, "exchange"]);
         Route::post("assign_condition", [MobileCylinderController::class, "assignCondition"]);
-        Route::post("assign_cylinder", [MobileCylinderController::class, "assignCylinder"]);
         Route::get("capacity", [MobileCylinderController::class, "cylinderCapacity"]);
         Route::get("dropdowns", [MobileCylinderController::class, "dropdowns"]);
     });
@@ -135,6 +162,9 @@ Route::prefix("v1")->group(function () {
     Route::resource("vendors", MobileVendorController::class);
     // });
 });
+/**
+ * END OF MOBILE API ROUTE
+ */
 
 //
 Route::get('import_cylinder', [CylinderController::class, 'import']);

@@ -20,7 +20,7 @@ class CylinderResource extends JsonResource
             "barcode" => $this->barcode,
             "cylcode" => $this->cylcode,
             "size" => $this->size,
-            "weight" => $this->weight,
+            "weight" => $this->weight_id,
             "notes" => $this->notes,
             "amount" => $this->initial_amount,
             "images" => $this->images,

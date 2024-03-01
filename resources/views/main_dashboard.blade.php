@@ -162,7 +162,7 @@
             <div class="col-sm-6 col-sm-6">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Cylinders (Petrocel & Customers)</h4>
+                        <h4 class="card-title">Cylinders (TopOil & Customers)</h4>
                     </div>
                     <div class="card-body shadow-lg">
                         <canvas id="cylinder-chart"></canvas>
@@ -254,7 +254,7 @@
         var myDoughnutChart = new Chart(ptc, {
             type: 'doughnut',
             data: {
-                labels: ['Petrocel', 'Customer'],
+                labels: ['TopOil', 'Customer'],
                 datasets: [{
                     data: [student, staff],
                     backgroundColor: [
