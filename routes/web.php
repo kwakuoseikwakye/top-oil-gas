@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
-Route::get('vendors', [RouteController::class, 'vendors'])->name('vendors');
+Route::get('dispatch', [RouteController::class, 'vendors'])->name('dispatch');
 Route::get('customers', [RouteController::class, 'customers'])->name('customers');
 Route::get('employees', [RouteController::class, 'employees'])->name('employees');
 Route::get('logs', [RouteController::class, 'logs'])->name('logs');

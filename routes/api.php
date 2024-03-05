@@ -10,6 +10,7 @@ use App\Http\Controllers\api\v1\CylinderController as MobileCylinderController;
 use App\Http\Controllers\api\v1\VendorController as MobileVendorController;
 use App\Http\Controllers\api\v1\DashboardController as MobileDashboardController;
 use App\Http\Controllers\api\v1\EmployeeController as MobileEmployeeController;
+use App\Http\Controllers\api\v1\PaymentController as V1PaymentController;
 use App\Http\Controllers\api\v1\WarehouseController as MobileWarehouseController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
@@ -39,6 +40,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+/**
+ * MOBILE API ROUTE
+ */
 Route::prefix("v1")->group(function () {
     // Login and registraion routes do not require authentication
     Route::post("login", [AuthenticationController::class, "login"]);
@@ -68,8 +72,25 @@ Route::prefix("v1")->group(function () {
     });
     Route::resource("dashboard", MobileDashboardController::class);
 
+    //payment route
+    Route::prefix("payments")->group(function () {
+        Route::post("initiate", [V1PaymentController::class, "initiatePayment"]);
+        Route::get("verify_payment/{transID}", [V1PaymentController::class, "verifyPayment"]);
+    });
     // Customers 
     Route::prefix("customers")->group(function () {
+        Route::get("get_dispatch/{orderid}", [MobileCustomerController::class, "getDispatch"]);
+        Route::get("cylinders", [MobileCustomerController::class, "getCustomerCylinders"]);
+        Route::get("get_pickup", [MobileCustomerController::class, "getPickupStations"]);
+        Route::get("get_orders", [MobileCustomerController::class, "getOrders"]);
+        Route::post("add_orders", [MobileCustomerController::class, "addOrders"]);
+        Route::post("bulk_order", [MobileCustomerController::class, "bulkOrder"]);
+        Route::post("purchase_now", [MobileCustomerController::class, "purchaseNow"]);
+        Route::post("add_location", [MobileCustomerController::class, "addLocation"]);
+        Route::post("update_location/{locationId}", [MobileCustomerController::class, "updateLocation"]);
+        Route::delete("delete_location/{locationId}", [MobileCustomerController::class, "deleteLocation"]);
+        Route::get("get_location", [MobileCustomerController::class, "getLocation"]);
+        Route::post("add_cart", [MobileCustomerController::class, "addCart"]);
         Route::post("update", [MobileCustomerController::class, "update"]);
         Route::get("trash", [MobileCustomerController::class, "trash"]);
         Route::post("restore", [MobileCustomerController::class, "restore"]);
@@ -118,6 +139,9 @@ Route::prefix("v1")->group(function () {
     Route::resource("employees", MobileEmployeeController::class);
 
     Route::prefix("cylinders")->group(function () {
+        Route::post("assign_cylinder", [MobileCylinderController::class, "assignSingleCylinder"]);
+        Route::post("assign_bulk_cylinder", [MobileCylinderController::class, "assignBulkCylinder"]);
+        Route::post("refill_cylinder", [MobileCylinderController::class, "refillCylinder"]);
         Route::get("weight", [MobileCylinderController::class, "fetchCylinderWeight"]);
         Route::get("conditions", [MobileCylinderController::class, "cylinderConditions"]);
         Route::get("owners", [MobileCylinderController::class, "cylinderOwner"]);
@@ -125,7 +149,6 @@ Route::prefix("v1")->group(function () {
         Route::get("{seachType}/{keyword}", [MobileCylinderController::class, "search"]);
         Route::post("exchange", [MobileCylinderController::class, "exchange"]);
         Route::post("assign_condition", [MobileCylinderController::class, "assignCondition"]);
-        Route::post("assign_cylinder", [MobileCylinderController::class, "assignCylinder"]);
         Route::get("capacity", [MobileCylinderController::class, "cylinderCapacity"]);
         Route::get("dropdowns", [MobileCylinderController::class, "dropdowns"]);
     });
@@ -142,6 +165,9 @@ Route::prefix("v1")->group(function () {
     Route::resource("vendors", MobileVendorController::class);
     // });
 });
+/**
+ * END OF MOBILE API ROUTE
+ */
 
 //
 Route::get('import_cylinder', [CylinderController::class, 'import']);

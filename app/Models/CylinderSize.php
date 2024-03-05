@@ -15,12 +15,14 @@ class CylinderSize extends Model
     const UPDATED_AT = 'modifydate';
 
     protected $fillable = [
-        'transid',
-        'description',
-        'createdate',
-        'createuser',
-        'modifyuser',
-        'modifydate',
-        'deleted',
+        'id',
+        'desc',
+        'weight',
+        'amount',
     ];
+
+    public function cylinders()
+    {
+        return $this->hasMany(Cylinder::class, 'weight_id', 'id');
+    }
 }

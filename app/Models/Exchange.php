@@ -17,8 +17,8 @@ class Exchange extends Model
     protected $keyType = "string";
 
     protected $fillable = [
-        "transid", "custno", "customer_phone", "vendor_no", "cylcode_old", "cylcode_new",
-        "cylcode_condition", "barcode", "litres", "deleted", "createdate",
+        "transid", "custno", "order_id", "vendor_no", "cylcode_old", "cylcode_new",
+        "cylcode_condition", "barcode", "status", "deleted", "createdate",
         "createuser", "modifydate", "modifyuser",
     ];
 }

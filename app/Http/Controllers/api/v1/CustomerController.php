@@ -6,6 +6,12 @@ use App\Arkesel\Arkesel as ASms;
 use App\Http\Controllers\Controller;
 use App\Models\Log as ModelsLog;
 use App\Models\Customer;
+use App\Models\CustomerCylinder;
+use App\Models\CustomerLocation;
+use App\Models\Cylinder;
+use App\Models\CylinderSize;
+use App\Models\Dispatch;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +21,11 @@ use Illuminate\Support\Facades\Validator;
 use Stevebauman\Location\Facades\Location;
 use Illuminate\Support\Str;
 
+use function PHPUnit\Framework\isNull;
+
 class CustomerController extends Controller
 {
-    protected function extractToken(Request $request)
+    public static function extractToken(Request $request)
     {
         $authorizationHeader = $request->header('Authorization');
         if (Str::startsWith($authorizationHeader, 'Bearer ')) {
@@ -25,6 +33,694 @@ class CustomerController extends Controller
         }
         return null;
     }
+
+    private function getAuthenticatedCustomer(Request $request)
+    {
+        $token = $this->extractToken($request);
+
+        if ($token) {
+            $user = User::where('remember_token', $token)->first();
+            return $user->userid;
+        } else {
+            return null;
+        }
+    }
+
+    public function getPickupStations(Request $request)
+    {
+        return response()->json([
+            "status" => true,
+            "message" => "Request successful",
+            "data" => DB::table("tblpickup")->get()
+        ]);
+    }
+
+    public function getOrders(Request $request)
+    {
+        $token = $this->extractToken($request);
+
+        if (!empty($token)) {
+            $user = User::where('remember_token', $token)->first();
+            if (empty($user)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
+        return response()->json([
+            "status" => true,
+            "message" => "Request successful",
+            "data" => CustomerCylinder::with(['cylinder', 'cylinder.cylinderWeight'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
+        ]);
+    }
+
+    public function getCustomerCylinders(Request $request)
+    {
+        try {
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+            return response()->json([
+                "status" => true,
+                "message" => "Request successful",
+                "data" => CustomerLocation::select("tblcylinder.*", "tblcylinder_size.*")
+                    ->join("tblcylinder", "tblcylinder.location_id", "tblcustomer_location.id")
+                    ->join("tblcylinder_size", "tblcylinder_size.id", "tblcylinder.weight_id")
+                    ->where("tblcustomer_location.custno", $user->userid)
+                    ->get()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function getLocation(Request $request)
+    {
+        $token = $this->extractToken($request);
+
+        if (!empty($token)) {
+            $user = User::where('remember_token', $token)->first();
+            if (empty($user)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
+        return response()->json([
+            "status" => true,
+            "message" => "Request successful",
+            "data" => CustomerLocation::with(['cylinders', 'cylinders.cylinderWeight'])->where('tblcustomer_location.custno', $user->userid)->get()
+        ]);
+    }
+
+    public function getDispatch(Request $request, $orderid)
+    {
+        try {
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+            $dispatch = Dispatch::where('order_id', $orderid)->first();
+            if (empty($dispatch)) {
+                $customerDispatch = null;
+                return response()->json([
+                    "status" => true,
+                    "message" => "Request successful",
+                    "data" => $customerDispatch
+                ]);
+            }
+            if ($dispatch->pickup_location == 0) {
+                $customerDispatch =  Dispatch::select('tbldispatch.*', 'tblcustomer_location.*')
+                    ->join('tblcustomer_location', 'tblcustomer_location.id', 'tbldispatch.location_id')
+                    ->where('tbldispatch.order_id', $orderid)
+                    // ->where('tbldispatch.createuser', $user->userid)
+                    ->get();
+            } else {
+                $customerDispatch = Dispatch::select('tbldispatch.*', 'tblpickup.*')
+                    ->join('tblpickup', 'tblpickup.id', 'tbldispatch.pickup_location')
+                    ->where('tbldispatch.order_id', $orderid)->get();
+            }
+            return response()->json([
+                "status" => true,
+                "message" => "Request successful",
+                "data" => $customerDispatch
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
+    public function addLocation(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "name" => "required",
+                "custno" => "required",
+                "address" => "required",
+                "default" => "required",
+                "lat" => "required",
+                "long" => "required",
+                "phone1" => "required|numeric",
+                // "cylcode" => "required|unique:tblcustomer_location,cylcode",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Adding location failed. " . join(". ", $validator->errors()->all()),
+                ]);
+            }
+
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            // $checkPhone = CustomerLocation::where('custno',$request->custno)->where
+
+            DB::beginTransaction();
+            DB::table("tblcustomer_location")->insert([
+                "name" => $request->name,
+                "custno" => $request->custno,
+                "phone1" => $request->phone1,
+                "phone2" => $request->phone2,
+                "address" => $request->address,
+                "additional_info" => $request->additional_info,
+                "default" => $request->default,
+                "long" => $request->long,
+                "lat" => $request->lat,
+            ]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $request->custno,
+                "module" => "Customer",
+                "action" => "Add",
+                "activity" => "Customer added locaiton from Mobile with id {$request->custno} successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $request->custno,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                "status" => true,
+                "message" => "Location added successful",
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("An error occured during adding location", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function deleteLocation($id)
+    {
+        DB::table("tblcustomer_location")->where("id", $id)->delete();
+
+        return response()->json([
+            "status" => true,
+            "message" => "Location deleted"
+        ]);
+    }
+
+    public function updateLocation(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "name" => "required",
+                "address" => "required",
+                "lat" => "required",
+                "long" => "required",
+                "phone1" => "required|numeric",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Updating location failed. " . join(". ", $validator->errors()->all()),
+                ]);
+            }
+
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            DB::beginTransaction();
+            DB::table("tblcustomer_location")->where("id", $id)->update([
+                "name" => $request->name,
+                "phone1" => $request->phone1,
+                "phone2" => $request->phone2,
+                "address" => $request->address,
+                "additional_info" => $request->additional_info,
+                "long" => $request->long,
+                "lat" => $request->lat,
+            ]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Customer",
+                "action" => "Update",
+                "activity" => "Customer updated locaiton from Mobile with id {$user->userid} successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                "status" => true,
+                "message" => "Location updated successful",
+                "data" => DB::table("tblcustomer_location")->where("custno", $user->userid)->where("id", $id)->first()
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("An error occured during updating location", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function addCart(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "cart_items.*.cylcode" => "required",
+                "cart_items.*.qty" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Adding cart failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            DB::beginTransaction();
+            $custno = $this->getAuthenticatedCustomer($request);
+            foreach ($request->cart_items as $item) {
+                DB::table("tblcart")->insert([
+                    "cylcode" => $item['cylcode'],
+                    "qty" => $item['qty'],
+                    "custno" => $custno,
+                ]);
+            }
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $custno,
+                "module" => "Customer",
+                "action" => "Add",
+                "activity" => "Customer added cart from Mobile with id {$custno} successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $custno,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                "status" => true,
+                "message" => "Cart added successful",
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during adding location", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function bulkOrder(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "bulk_items.*.qty" => "required",
+                "bulk_items.*.weight_id" => "required",
+                "location_id" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "bulk order failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(4)));
+            foreach ($request->bulk_items as $item) {
+                DB::table("tblcustomer_cylinder")->insert([
+                    "transid" => strtoupper(bin2hex(random_bytes(4))),
+                    "order_id" => $orderid,
+                    "custno" => $user->userid,
+                    "quantity" => $item['qty'],
+                    "date_acquired" => date("Y-m-d"),
+                    "location_id" => $request->location_id,
+                    "weight_id" => $item['weight_id'],
+                    "status" => 0,
+                    "deleted" =>  0,
+                    "createdate" =>  date("Y-m-d H:i:s"),
+                    "createuser" =>  $user->userid,
+                ]);
+            }
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Customer",
+                "action" => "Add",
+                "activity" => "Customer ordered bulk from Mobile with id {$user->userid} successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+            return response()->json([
+                "status" => true,
+                "message" => "Order successful",
+                "data" => $orderid
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during adding order", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function addOrders(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "date" => "required",
+                "location_id" => "required",
+                "weight_id" => "required",
+            ], [
+                "date.required" => "No date supplied",
+                "weight_id.required" => "No weight supplied",
+                "location_id.required" => "No location supplied",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Adding customer orders failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(6)));
+            DB::table("tblcustomer_cylinder")->insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "custno" => $user->userid,
+                "order_id" => $orderid,
+                // "cylcode" => $cylinder->cylcode,
+                "quantity" => "1",
+                "date_acquired" => $request->date,
+                "location_id" => $request->location_id,
+                "weight_id" => $request->weight_id,
+                "status" => 0,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            // Cylinder::where('cylcode', $cylinder->cylcode)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Cylinder assigned from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Ordered successfully",
+                "data" => CustomerCylinder::where('order_id', $orderid)->first()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
+    public function purchaseNow(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "location_id" => "required",
+                "weight_id" => "required",
+            ], [
+                "weight_id.required" => "No weight supplied",
+                "location_id.required" => "No location supplied",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Purchasing customer orders failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $token = $this->extractToken($request);
+
+            if (!is_null($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(6)));
+            DB::table("tblcustomer_cylinder")->insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "custno" => $user->userid,
+                // "cylcode" => $cylinder->cylcode,
+                "quantity" => "1",
+                "date_acquired" => date("Y-m-d"),
+                "weight_id" => $request->weight_id,
+                "location_id" => $request->location_id,
+                "status" => 0,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            // Cylinder::where('cylcode', $cylinder->cylcode)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Cylinder ordered from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Ordered successfully",
+                "data" => CustomerCylinder::where('order_id', $orderid)->first()
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
