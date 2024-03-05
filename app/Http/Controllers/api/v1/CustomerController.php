@@ -10,6 +10,7 @@ use App\Models\CustomerCylinder;
 use App\Models\CustomerLocation;
 use App\Models\Cylinder;
 use App\Models\CylinderSize;
+use App\Models\Dispatch;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Stevebauman\Location\Facades\Location;
 use Illuminate\Support\Str;
+
+use function PHPUnit\Framework\isNull;
 
 class CustomerController extends Controller
 {
@@ -73,11 +76,45 @@ class CustomerController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => DB::table("tblcustomer_cylinder")->select("tblcustomer_cylinder.*", "tblcustomer_location.*")
-                ->leftJoin("tblcustomer_location", "tblcustomer_cylinder.location_id", "tblcustomer_location.id")
-                ->where("tblcustomer_cylinder.custno", "=", $user->userid)
-                ->get()
+            "data" => CustomerCylinder::with(['cylinder', 'cylinder.cylinderWeight'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
         ]);
+    }
+
+    public function getCustomerCylinders(Request $request)
+    {
+        try {
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+            return response()->json([
+                "status" => true,
+                "message" => "Request successful",
+                "data" => CustomerLocation::select("tblcylinder.*", "tblcylinder_size.*")
+                    ->join("tblcylinder", "tblcylinder.location_id", "tblcustomer_location.id")
+                    ->join("tblcylinder_size", "tblcylinder_size.id", "tblcylinder.weight_id")
+                    ->where("tblcustomer_location.custno", $user->userid)
+                    ->get()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+            ]);
+        }
     }
 
     public function getLocation(Request $request)
@@ -101,8 +138,62 @@ class CustomerController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => CustomerLocation::with(['cylinders', 'cylinders.cylinderWeight'])->get()
+            "data" => CustomerLocation::with(['cylinders', 'cylinders.cylinderWeight'])->where('tblcustomer_location.custno', $user->userid)->get()
         ]);
+    }
+
+    public function getDispatch(Request $request, $orderid)
+    {
+        try {
+            $token = $this->extractToken($request);
+
+            if (!empty($token)) {
+                $user = User::where('remember_token', $token)->first();
+                if (empty($user)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+            $dispatch = Dispatch::where('order_id', $orderid)->first();
+            if (empty($dispatch)) {
+                $customerDispatch = null;
+                return response()->json([
+                    "status" => true,
+                    "message" => "Request successful",
+                    "data" => $customerDispatch
+                ]);
+            }
+            if ($dispatch->pickup_location == 0) {
+                $customerDispatch =  Dispatch::select('tbldispatch.*', 'tblcustomer_location.*')
+                    ->join('tblcustomer_location', 'tblcustomer_location.id', 'tbldispatch.location_id')
+                    ->where('tbldispatch.order_id', $orderid)
+                    // ->where('tbldispatch.createuser', $user->userid)
+                    ->get();
+            } else {
+                $customerDispatch = Dispatch::select('tbldispatch.*', 'tblpickup.*')
+                    ->join('tblpickup', 'tblpickup.id', 'tbldispatch.pickup_location')
+                    ->where('tbldispatch.order_id', $orderid)->get();
+            }
+            return response()->json([
+                "status" => true,
+                "message" => "Request successful",
+                "data" => $customerDispatch
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
     }
 
     public function addLocation(Request $request)
@@ -115,8 +206,8 @@ class CustomerController extends Controller
                 "default" => "required",
                 "lat" => "required",
                 "long" => "required",
-                "phone1" => "required|numeric|unique:tblcustomer_location,phone1",
-                "cylcode" => "required|unique:tblcustomer_location,cylcode",
+                "phone1" => "required|numeric",
+                // "cylcode" => "required|unique:tblcustomer_location,cylcode",
             ]);
 
             if ($validator->fails()) {
@@ -143,11 +234,12 @@ class CustomerController extends Controller
                 ], 401);
             }
 
+            // $checkPhone = CustomerLocation::where('custno',$request->custno)->where
+
             DB::beginTransaction();
             DB::table("tblcustomer_location")->insert([
                 "name" => $request->name,
                 "custno" => $request->custno,
-                "cylcode" => $request->cylcode,
                 "phone1" => $request->phone1,
                 "phone2" => $request->phone2,
                 "address" => $request->address,
@@ -213,7 +305,6 @@ class CustomerController extends Controller
                 "lat" => "required",
                 "long" => "required",
                 "phone1" => "required|numeric",
-                // "cylcode" => "required",
             ]);
 
             if ($validator->fails()) {
@@ -259,7 +350,7 @@ class CustomerController extends Controller
                 "transid" => $transid1,
                 "username" => $user->userid,
                 "module" => "Customer",
-                "action" => "Add",
+                "action" => "Update",
                 "activity" => "Customer updated locaiton from Mobile with id {$user->userid} successfully",
                 "ipaddress" => $userIp,
                 "createuser" =>  $user->userid,

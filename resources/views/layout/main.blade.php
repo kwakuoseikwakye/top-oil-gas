@@ -62,10 +62,10 @@
                             <!--begin::Page Title-->
                             <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">@yield('pageName')</h5>
                             <!--end::Page Title-->
-                            <a data-toggle="modal" data-target="#search-modal" class="btn mr-3 btn-primary btn-lg pt-3">
-                                Print Dispatch & Return Report</a>
-                            <a data-toggle="modal" data-target="#search-customer-modal" class="btn btn-warning btn-lg pt-3">
-                                Search Customer Cylinder</a>
+                            {{-- <a data-toggle="modal" data-target="#search-modal" class="btn mr-3 btn-primary btn-lg pt-3">
+                                Print Dispatch & Return Report</a> --}}
+                            {{-- <a data-toggle="modal" data-target="#search-customer-modal" class="btn btn-warning btn-lg pt-3">
+                                Search Customer Cylinder</a> --}}
                         </div>
                         <!--end::Info-->
                         <!--begin::Toolbar-->

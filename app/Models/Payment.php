@@ -16,9 +16,13 @@ class Payment extends Model
     public $incrementing = false;
     protected $keyType = "string";
 
+    const SUCCESS = 'success';
+    const FAILED = 'failed';
+    const PENDING = 'pending';
+
     protected $fillable = [
-        "transid", "custno", "payment_mode", "cylcode", 
-         "barcode", "amount_due", "amount_paid", "balance",
+        "transid", "order_id", "payment_mode", "transaction_id", 
+         "status", "amount_due", "amount_paid", "balance",
          "deleted", "createdate",
         "createuser", "modifydate", "modifyuser",
     ];

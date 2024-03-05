@@ -9,6 +9,7 @@ use App\Models\Cylinder;
 use App\Models\Customer;
 use App\Models\CustomerCylinder;
 use App\Models\Condition;
+use App\Models\Dispatch;
 use App\Models\Exchange;
 use App\Models\Owner;
 use App\Models\PaymentMode;
@@ -30,6 +31,419 @@ class CylinderController extends Controller
         }
         return null;
     }
+
+    public function assignSingleCylinder(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                // "date" => "required",
+                "location_id" => "required",
+                "weight_id" => "required",
+                "delivery_mode" => "required",
+                "order_type" => "required",
+            ], [
+                // "date.required" => "No date supplied",
+                "weight_id.required" => "No weight ID supplied",
+                "location_id.required" => "No location supplied",
+                "delivery_mode.required" => "No location supplied",
+                "order_type.required" => "No order type supplied",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Cylinder Assignment failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $token = $this->extractToken($request);
+
+            if ($token) {
+                $user = User::where('remember_token', $token)->first();
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            if ($request->delivery_mode === CustomerCylinder::PICKUP && empty($request->pickup_id)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup id is requied"
+                ], 422);
+            }
+
+            if ($request->order_type === CustomerCylinder::ORDER_TYPE_PICKUP_LATER && empty($request->order_type)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup date is requied"
+                ], 422);
+            }
+
+            //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+            $cylinder = Cylinder::where('weight_id', $request->weight_id)->where('requested', 0)->first()->cylcode;
+
+            if (empty($cylinder)) {
+                return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
+            }
+
+            $cylinderExists = CustomerCylinder::where("cylcode", $cylinder)->exists();
+            if ($cylinderExists) {
+                return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
+            }
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(6)));
+            Cylinder::where("cylcode", $cylinder)->update([
+                "location_id" => $request->location_id
+            ]);
+            CustomerCylinder::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "custno" => $user->userid,
+                "cylcode" => $cylinder, //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+                "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
+                "location_id" => $request->location_id,
+                "weight_id" => $request->weight_id,
+                "status" => CustomerCylinder::PENDING,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+            Dispatch::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "location_id" => $request->location_id,
+                // "cylcode" => $cylinder,
+                "pickup_location" => $request->pickup_id ?? 0,
+                // "dispatch" =>  0,
+                "deleted" =>  0,
+                "status" => Dispatch::PENDING,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            Cylinder::where('cylcode', $cylinder)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Assigned successfully",
+                "data" => $orderid
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
+    public function assignBulkCylinder(Request $request)
+    {
+        // return $request->all();
+        try {
+            $validator = Validator::make($request->all(), [
+                "bulk_items.*.qty" => "required",
+                "bulk_items.*.weight_id" => "required",
+                "location_id" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Bulk Assignment failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $token = $this->extractToken($request);
+
+            if ($token) {
+                $user = User::where('remember_token', $token)->first();
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            if ($request->delivery_mode === CustomerCylinder::PICKUP && empty($request->pickup_id)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup id is requied"
+                ], 422);
+            }
+
+            if ($request->order_type === CustomerCylinder::ORDER_TYPE_PICKUP_LATER && empty($request->order_type)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup date is requied"
+                ], 422);
+            }
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(6)));
+            foreach ($request->bulk_items as $item) {
+                $cylinders = Cylinder::where('weight_id', $item['weight_id'])->where('requested', 0)->limit($item['qty'])->get('cylcode');
+
+                if (count($cylinders) === 0) {
+                    return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
+                }
+
+                $cylinderExists = CustomerCylinder::whereIn("cylcode", $cylinders)->exists();
+                if ($cylinderExists) {
+                    return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
+                }
+                foreach ($cylinders as $cylinder) {
+                    DB::table("tblcustomer_cylinder")->insert([
+                        "transid" => strtoupper(bin2hex(random_bytes(4))),
+                        "order_id" => $orderid,
+                        "custno" => $user->userid,
+                        "cylcode" => $cylinder->cylcode,
+                        "weight_id" => $cylinder->weight_id,
+                        "location_id" => $cylinder->location_id,
+                        "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
+                        "status" => CustomerCylinder::PENDING,
+                        "deleted" =>  0,
+                        "createdate" =>  date("Y-m-d H:i:s"),
+                        "createuser" =>  $user->userid,
+                    ]);
+                }
+
+                Cylinder::whereIn('cylcode', $cylinders)->update([
+                    'requested' => 1,
+                    "location_id" => $request->location_id
+                ]); // Mark the cylinder as requested by someone]);
+            }
+            //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+            Dispatch::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "location_id" => $cylinder->location_id,
+                "pickup_location" => $request->pickup_id ?? 0,
+                "status" => Dispatch::PENDING,
+                // "dispatch" =>  0,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Assigned successfully",
+                "data" => $orderid
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
+    public function refillCylinder(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                // "refill_items.*.qty" => "required",
+                "refill_items.*.cylcode" => "required",
+                // "location_id" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Cylinder refill failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            if ($request->delivery_mode === CustomerCylinder::PICKUP && empty($request->pickup_id)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup id is requied"
+                ], 422);
+            }
+
+            if ($request->order_type === CustomerCylinder::ORDER_TYPE_PICKUP_LATER && empty($request->order_type)) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Pickup date is requied"
+                ], 422);
+            }
+
+            $token = $this->extractToken($request);
+
+            if ($token) {
+                $user = User::where('remember_token', $token)->first();
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+            DB::beginTransaction();
+            $orderid = 'RF' . strtoupper(bin2hex(random_bytes(3)));
+            foreach ($request->refill_items as $item) {
+                $customerCylinder = CustomerCylinder::where('cylcode', $item['cylcode'])->first();
+                if (empty($customerCylinder)) {
+                    return response()->json(['status' => false, 'message' => 'There are no cylinders assigned to this user'], 406);
+                }
+                $oldCylinder = Cylinder::where('cylcode', $item['cylcode'])->first();
+                //TODO:: Will remove cylinder automatic assignment 
+                $newCylinder = Cylinder::where('weight_id', $oldCylinder->weight_id)->where('requested', 0)->first();
+                if (empty($newCylinder)) {
+                    return response()->json(['status' => false, 'message' => 'No cylinders are available'], 406);
+                }
+
+                CustomerCylinder::insert([
+                    "transid" => strtoupper(bin2hex(random_bytes(4))),
+                    "order_id" => $orderid,
+                    "custno" => $user->userid,
+                    "cylcode" => $newCylinder->cylcode,
+                    "weight_id" => $newCylinder->weight_id,
+                    "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
+                    "status" => CustomerCylinder::PENDING,
+                    "deleted" =>  0,
+                    "createdate" =>  date("Y-m-d H:i:s"),
+                    "createuser" =>  $user->userid,
+                ]);
+
+                Cylinder::where('cylcode', $newCylinder->cylcode)->update([
+                    'requested' => 1,
+                    "location_id" => $oldCylinder->location_id
+                ]); // Mark the cylinder as requested by someone]);
+
+                Cylinder::where('cylcode', $oldCylinder->cylcode)->update([
+                    'requested' => 2,
+                    "location_id" => null
+                ]); // Now set old cylinder as not requested
+
+                Exchange::insert([
+                    "transid" => strtoupper(bin2hex(random_bytes(4))),
+                    "custno" => $user->userid,
+                    "order_id" => $orderid,
+                    "cylcode_old" => $oldCylinder->cylcode,
+                    "cylcode_new" => $newCylinder->cylcode,
+                    "status" => "pending",
+                    "deleted" =>  0,
+                    "createdate" =>  date("Y-m-d H:i:s"),
+                    "createuser" =>  $user->userid,
+                ]);
+            }
+
+            //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+            Dispatch::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "location_id" => $newCylinder->location_id,
+                "pickup_location" => $request->pickup_id ?? 0,
+                // "dispatch" =>  0,
+                "status" => Dispatch::PENDING,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+            Cylinder::whereIn('cylcode', $request->refill_items)->update([
+                'requested' => 0,
+                "location_id" => null
+            ]); // Now set old cylinder as not requested
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Cylinder  {$newCylinder->cylcode} assigned from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Assigned successfully",
+                "data" => $orderid
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -235,324 +649,6 @@ class CylinderController extends Controller
                 "ok" => false,
                 "msg" => "Request failed. An internal error occured",
             ]);
-        }
-    }
-
-    public function assignSingleCylinder(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                // "date" => "required",
-                "location_id" => "required",
-                "weight_id" => "required",
-            ], [
-                // "date.required" => "No date supplied",
-                "weight_id.required" => "No weight ID supplied",
-                "location_id.required" => "No location supplied",
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Cylinder Assignment failed. " . join(". ", $validator->errors()->all()),
-                ], 422);
-            }
-
-            $token = $this->extractToken($request);
-
-            if ($token) {
-                $user = User::where('remember_token', $token)->first();
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Unauthorized - Token not provided or invalid'
-                ], 401);
-            }
-
-            $cylinder = Cylinder::where('weight_id', $request->weight_id)->where('requested', 0)->first()->cylcode;
-
-            if (empty($cylinder)) {
-                return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
-            }
-
-            $cylinderExists = CustomerCylinder::where("cylcode", $cylinder)->exists();
-            if ($cylinderExists) {
-                return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
-            }
-
-            DB::beginTransaction();
-            $orderid = strtoupper(bin2hex(random_bytes(6)));
-            Cylinder::where("cylcode", $cylinder)->update([
-                "location_id" => $request->location_id
-            ]);
-            DB::table("tblcustomer_cylinder")->insert([
-                "transid" => strtoupper(bin2hex(random_bytes(4))),
-                "order_id" => $orderid,
-                "custno" => $user->userid,
-                "cylcode" => $cylinder,
-                "date_acquired" => $request->date ?? date("Y-m-d"),
-                "location_id" => $request->location_id,
-                "weight_id" => $request->weight_id,
-                "status" => 'pending',
-                "deleted" =>  0,
-                "createdate" =>  date("Y-m-d H:i:s"),
-                "createuser" =>  $user->userid,
-            ]);
-
-            Cylinder::where('cylcode', $cylinder)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
-
-            $userIp = $request->ip();
-            $locationData = Location::get($userIp);
-            $transid1 = strtoupper(bin2hex(random_bytes(4)));
-
-            ModelsLog::insert([
-                "transid" => $transid1,
-                "username" => $user->userid,
-                "module" => "Cylinder",
-                "action" => "Assignment",
-                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
-                "ipaddress" => $userIp,
-                "createuser" =>  $user->userid,
-                "createdate" => gmdate("Y-m-d H:i:s"),
-                "longitude" => $locationData->longitude ?? $userIp,
-                "latitude" => $locationData->latitude ?? $userIp,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                "status" => true,
-                "message" => "Assigned successfully",
-                "data" => $orderid
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("An error occured during cylinder assignment", [
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ]);
-
-            return response()->json([
-                "status" => false,
-                "message" => "Request failed. An internal error occured",
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ], 500);
-        }
-    }
-
-    public function assignBulkCylinder(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                "bulk_items.*.qty" => "required",
-                "bulk_items.*.weight_id" => "required",
-                "location_id" => "required",
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Bulk Assignment failed. " . join(". ", $validator->errors()->all()),
-                ], 422);
-            }
-
-            $token = $this->extractToken($request);
-
-            if ($token) {
-                $user = User::where('remember_token', $token)->first();
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Unauthorized - Token not provided or invalid'
-                ], 401);
-            }
-
-            DB::beginTransaction();
-            $orderid = strtoupper(bin2hex(random_bytes(6)));
-            foreach ($request->bulk_items as $item) {
-                $cylinders = Cylinder::where('weight_id', $item['weight_id'])->where('requested', 0)->limit($item['qty'])->get('cylcode');
-
-                if (count($cylinders) === 0) {
-                    return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
-                }
-
-                $cylinderExists = CustomerCylinder::whereIn("cylcode", $cylinders)->exists();
-                if ($cylinderExists) {
-                    return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
-                }
-                foreach ($cylinders as $cylinder) {
-                    DB::table("tblcustomer_cylinder")->insert([
-                        "transid" => strtoupper(bin2hex(random_bytes(4))),
-                        "order_id" => $orderid,
-                        "custno" => $user->userid,
-                        "cylcode" => $cylinder->cylcode,
-                        "date_acquired" => $request->date ?? date("Y-m-d"),
-                        "status" => 'pending',
-                        "deleted" =>  0,
-                        "createdate" =>  date("Y-m-d H:i:s"),
-                        "createuser" =>  $user->userid,
-                    ]);
-                }
-                Cylinder::whereIn('cylcode', $cylinders)->update([
-                    'requested' => 1,
-                    "location_id" => $request->location_id
-                ]); // Mark the cylinder as requested by someone]);
-            }
-
-
-            $userIp = $request->ip();
-            $locationData = Location::get($userIp);
-            $transid1 = strtoupper(bin2hex(random_bytes(4)));
-
-            ModelsLog::insert([
-                "transid" => $transid1,
-                "username" => $user->userid,
-                "module" => "Cylinder",
-                "action" => "Assignment",
-                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
-                "ipaddress" => $userIp,
-                "createuser" =>  $user->userid,
-                "createdate" => gmdate("Y-m-d H:i:s"),
-                "longitude" => $locationData->longitude ?? $userIp,
-                "latitude" => $locationData->latitude ?? $userIp,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                "status" => true,
-                "message" => "Assigned successfully",
-                "data" => $orderid
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("An error occured during cylinder assignment", [
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ]);
-
-            return response()->json([
-                "status" => false,
-                "message" => "Request failed. An internal error occured",
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ], 500);
-        }
-    }
-
-    public function refillCylinder(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                // "refill_items.*.qty" => "required",
-                "refill_items.*.cylcode" => "required",
-                // "location_id" => "required",
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Cylinder refill failed. " . join(". ", $validator->errors()->all()),
-                ], 422);
-            }
-
-            $token = $this->extractToken($request);
-
-            if ($token) {
-                $user = User::where('remember_token', $token)->first();
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Unauthorized - Token not provided or invalid'
-                ], 401);
-            }
-
-            DB::beginTransaction();
-            $orderid = 'RF' . strtoupper(bin2hex(random_bytes(3)));
-            foreach ($request->refill_items as $item) {
-                $oldCylinder = Cylinder::where('cylcode', $item['cylcode'])->first();
-                $newCylinder = Cylinder::where('weight_id', $oldCylinder->weight_id)->where('requested', 0)->first();
-
-                // if (count($cylinders) === 0) {
-                //     return response()->json(['status' => false, 'message' => 'There are no cylinders assigned to this user'], 406);
-                // }
-
-                CustomerCylinder::insert([
-                    "transid" => strtoupper(bin2hex(random_bytes(4))),
-                    "order_id" => $orderid,
-                    "custno" => $user->userid,
-                    "cylcode" => $newCylinder->cylcode,
-                    "date_acquired" => $request->date ?? date("Y-m-d"),
-                    "status" => 'pending',
-                    "deleted" =>  0,
-                    "createdate" =>  date("Y-m-d H:i:s"),
-                    "createuser" =>  $user->userid,
-                ]);
-                Cylinder::where('cylcode', $newCylinder->cylcode)->update([
-                    'requested' => 1,
-                    "location_id" => $request->location_id
-                ]); // Mark the cylinder as requested by someone]);
-
-                Cylinder::where('cylcode', $oldCylinder->cylcode)->update([
-                    'requested' => 2,
-                    "location_id" => null
-                ]); // Now set old cylinder as not requested
-
-                Exchange::insert([
-                    "transid" => strtoupper(bin2hex(random_bytes(4))),
-                    "custno" => $user->userid,
-                    "order_id" => $orderid,
-                    "cylcode_old" => $oldCylinder->cylcode,
-                    "cylcode_new" => $newCylinder->cylcode,
-                    "status" => "pending",
-                    "deleted" =>  0,
-                    "createdate" =>  date("Y-m-d H:i:s"),
-                    "createuser" =>  $user->userid,
-                ]);
-            }
-
-            Cylinder::whereIn('cylcode', $request->refill_items)->update([
-                'requested' => 0,
-                "location_id" => null
-            ]); // Now set old cylinder as not requested
-            $userIp = $request->ip();
-            $locationData = Location::get($userIp);
-            $transid1 = strtoupper(bin2hex(random_bytes(4)));
-
-            ModelsLog::insert([
-                "transid" => $transid1,
-                "username" => $user->userid,
-                "module" => "Cylinder",
-                "action" => "Assignment",
-                "activity" => "Cylinder  {$newCylinder->cylcode} assigned from Mobile with id successfully",
-                "ipaddress" => $userIp,
-                "createuser" =>  $user->userid,
-                "createdate" => gmdate("Y-m-d H:i:s"),
-                "longitude" => $locationData->longitude ?? $userIp,
-                "latitude" => $locationData->latitude ?? $userIp,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                "status" => true,
-                "message" => "Assigned successfully",
-                "data" => $orderid
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("An error occured during cylinder assignment", [
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ]);
-
-            return response()->json([
-                "status" => false,
-                "message" => "Request failed. An internal error occured",
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ], 500);
         }
     }
 

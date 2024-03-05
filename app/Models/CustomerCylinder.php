@@ -11,6 +11,15 @@ class CustomerCylinder extends Model
     const CREATED_AT = "createdate";
     const UPDATED_AT = "modifydate";
 
+    const DELIVERY = 'delivery';
+    const PICKUP = 'pickup';
+    const PENDING = 'pending';
+    const SUCCESS = 'success';
+    const EN_ROUTE = 'en route';
+    const DELIVERED = 'delivered';
+    const ORDER_TYPE_PICKUP_NOW = 'pickup_now';
+    const ORDER_TYPE_PICKUP_LATER = 'pickup_later';
+
     protected $table = "tblcustomer_cylinder";
     protected $primaryKey = "transid";
     public $incrementing = false;

@@ -1,5 +1,5 @@
 @extends('layout.main')
-@section('pageName', 'Operators')
+@section('pageName', 'Dispatch')
 @section('page-content')
 
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
@@ -11,7 +11,7 @@
             <div class="card card-custom">
                 <div class="card-header flex-wrap border-0 pt-6 pb-0">
                     <div class="card-title">
-                        <h3 class="card-label">Operators
+                        <h3 class="card-label">Dispatch
                         </h3>
                     </div>
                     <div class="card-toolbar">
@@ -19,7 +19,7 @@
                         <!--begin::Button-->
                         <a data-toggle="modal" data-target="#add-vendor-modal"
                             class="btn btn-primary font-weight-bolder">
-                            Add Vendor</a>
+                            Add Dispatch</a>
                         <!--end::Button-->
                     </div>
                 </div>
@@ -29,7 +29,7 @@
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home">
-                                <span class="nav-text">Active Vendors</span>
+                                <span class="nav-text">Active Riders</span>
                             </a>
                         </li>
                     </ul>

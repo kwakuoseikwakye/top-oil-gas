@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CustomerCylinder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -51,8 +52,10 @@ class RouteController extends Controller
 
             $customerCyl = DB::table("tblcylinder")->where("deleted",0)
             ->where("owner","Customer")->count();
+            $totalOrders = CustomerCylinder::distinct('order_id')->count();
             // $cylinders 
             return view('main_dashboard',[
+                "totalOrders" => $totalOrders,
                 "cus" => $customerWeekly,
                 "customers" => $customers,
                 "paid" => $paid->total,

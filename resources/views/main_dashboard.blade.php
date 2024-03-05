@@ -41,15 +41,15 @@
                         <div class="card-body">
                             <div class="dash-widget-header">
                                 <span class="dash-widget-icon text-success">
-                                    <i class="fa fa-user-alt"></i>
+                                    <i class="flaticon-internet"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-payment">{{$cus}}</h3>
+                                    <h3 id="today-payment">{{$totalOrders}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
 
-                                <h6 class="text-dark">Customers This Week</h6>
+                                <h6 class="text-dark">Total Orders</h6>
                                 <div class="progress progress-sm">
                                     <div class="progress-bar bg-success w-50"></div>
                                 </div>
