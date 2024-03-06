@@ -178,6 +178,8 @@ class PaymentController extends Controller
             $payment  = Payment::find($transactionId);
             $payment->update(['status' => Payment::SUCCESS]);
             if (!$payment) {
+                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                // Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
                 return response()->json(['status' => false, 'message' => 'Invalid transaction id'], 200);
             }
             CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::SUCCESS]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CustomerCylinderResource;
 use App\Http\Resources\CylinderResource;
+use App\Http\Resources\OrderResource;
 use App\Imports\CylindersImport;
 use App\Models\Allocation;
 use App\Models\Customer;
@@ -20,6 +21,26 @@ use Stevebauman\Location\Facades\Location;
 
 class CylinderController extends Controller
 {
+    public function getOrders()
+    {
+        $data  = CustomerCylinder::select(
+            'tblcustomer_cylinder.*',
+            'tblcylinder_size.*',
+            'tblcustomer_location.*',
+            'tblcustomer.*',
+            'tblcylinder.*'
+        )
+            ->join('tblcustomer', 'tblcustomer.custno', 'tblcustomer_cylinder.custno')
+            ->join('tblcylinder', 'tblcylinder.cylcode', 'tblcustomer_cylinder.cylcode')
+            ->join('tblcustomer_location', 'tblcylinder.location_id', 'tblcustomer_location.id')
+            ->join('tblcylinder_size', 'tblcylinder.weight_id', 'tblcylinder_size.id')
+            ->orderByDesc('tblcustomer_cylinder.date_acquired')->get();
+
+        return response()->json([
+            // "data" => $data
+            "data" => OrderResource::collection($data)
+        ]);
+    }
 
     public function index()
     {

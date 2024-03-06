@@ -26,7 +26,7 @@ Route::get('customers', [RouteController::class, 'customers'])->name('customers'
 Route::get('employees', [RouteController::class, 'employees'])->name('employees');
 Route::get('logs', [RouteController::class, 'logs'])->name('logs');
 Route::get('users', [RouteController::class, 'users'])->name('admin users');
-Route::get('cylinders', [RouteController::class, 'cylinders'])->name('cylinders');
+Route::get('orders', [RouteController::class, 'cylinders'])->name('orders');
 Route::get('warehouse', [RouteController::class, 'warehouse'])->name('warehouse');
 Route::get('reports/customers', [RouteController::class, 'customersReport'])->name('reports');
 Route::get('reports/cylinders', [RouteController::class, 'cylinderReport'])->name('reports');

@@ -194,6 +194,7 @@ Route::resource("employees", EmployeeController::class);
 
 //Cylinders
 Route::prefix("cylinder")->group(function () {
+    Route::get("get_orders", [CylinderController::class, "getOrders"]);
     Route::get("customer", [CylinderController::class, "cylinderCustomer"]);
     Route::get("customer/{customer}/{cylinderFrom}/{cylinderTo}", [CylinderController::class, "customerCylinderReport"]);
     Route::get("{cylinderFrom}/{cylinderTo}", [CylinderController::class, "cylinderReport"]);
