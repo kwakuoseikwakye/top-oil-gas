@@ -11,7 +11,7 @@
             <div class="card card-custom">
                 <div class="card-header flex-wrap border-0 pt-6 pb-0">
                     <div class="card-title">
-                        <h3 class="card-label">Cylinders
+                        <h3 class="card-label">Orders
                         </h3>
                     </div>
                     <div class="card-toolbar">
@@ -30,7 +30,12 @@
 
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home">
+                            <a class="nav-link active" id="order-tab" data-toggle="tab" href="#order-nav">
+                                <span class="nav-text">All Orders</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home">
                                 <span class="nav-text">All Cylinders</span>
                             </a>
                         </li>
@@ -43,8 +48,30 @@
                     </ul>
 
                     <div class="tab-content mt-5" id="myTabContent">
+                        <div class="tab-pane fade show active" id="order-nav" role="tabpanel" aria-labelledby="order-tab">
+                            <div class="table-responsive mt-3">
+                                <table width="100%"
+                                    class="table table-bordered table-sm table-hover dataTable js-exportable"
+                                    id="order-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Cylinder Code</th>
+                                            <th>Date</th>
+                                            <th>Weight</th>
+                                            <th>Location</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!--Data is fetched here using ajax-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
                             <div class="table-responsive mt-3">
                                 <table width="100%"
                                     class="table table-bordered table-sm table-hover dataTable js-exportable"
@@ -105,6 +132,93 @@
 @include('modules.cylinder.modals.info')
 
 <script>
+    var orderTable = $('#order-table').DataTable({
+        dom: 'Bfrtip',
+        ajax: {
+            url: `${APP_URL}/api/cylinder/get_orders`,
+            type: "GET"
+
+        },
+        ordering: false,
+        order: [],
+        processing: true,
+        pageLength : 100,
+        columns: [{
+                data: "order_id"
+            },
+            {
+                data: "customer"
+            },
+            {
+                data: "cylcode"
+            },
+            {
+                data: "date"
+            },
+            {
+                data: "weight"
+            },
+            {
+                data: "location"
+            },
+            {
+                data: "status"
+            },
+        ],
+        // "columnDefs": [{
+        //         "targets": [6],
+        //         "visible": false
+        //     },
+        // ],
+        responsive: true,
+        buttons: [{
+                extend: 'print',
+                attr: {
+                    class: "btn btn-sm btn-info rounded-right"
+                },
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4]
+                }
+            },
+            {
+                extend: 'copy',
+                attr: {
+                    class: "btn btn-sm btn-info rounded-right"
+                },
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4]
+                }
+            },
+            {
+                extend: 'excel',
+                attr: {
+                    class: "btn btn-sm btn-info rounded-right"
+                },
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4]
+                }
+            },
+            {
+                extend: 'pdf',
+                attr: {
+                    class: "btn btn-sm btn-info rounded-right"
+                },
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4]
+                }
+            },
+            {
+                text: "Refresh",
+                attr: {
+                    class: "ml-2 btn-warning btn btn-sm rounded"
+                },
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload(false, null);
+                }
+            },
+        ]
+    });
+
     var cylinderTable = $('#cylinder-table').DataTable({
         dom: 'Bfrtip',
         ajax: {
