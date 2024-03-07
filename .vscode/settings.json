@@ -22,6 +22,6 @@
     ]
 },
 "[blade]":{
-    "editor.defaultFormatter": "HookyQR.beautify"
+    "editor.defaultFormatter": "shufo.vscode-blade-formatter"
 }
 }

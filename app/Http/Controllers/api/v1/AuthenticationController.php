@@ -134,7 +134,7 @@ class AuthenticationController extends Controller
             DB::commit();
 
             $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, 60);
+            Cache::put('otp_' . $request->phone, $otp, 240);
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -176,6 +176,7 @@ class AuthenticationController extends Controller
         }
         // Retrieve OTP from cache or wherever it was stored
         $cachedOtp = Cache::get('otp_' . $request->phone);
+        // return $cachedOtp;
 
         if ($cachedOtp && $cachedOtp == $request->otp) {
             // OTP is correct, proceed with user activation or any further steps
@@ -224,7 +225,7 @@ class AuthenticationController extends Controller
             $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
             $sms->send($request->phone, $msg);
         } else {
-            Cache::put('otp_' . $request->phone, $otp, 60);
+            Cache::put('otp_' . $request->phone, $otp, 240);
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -267,7 +268,7 @@ class AuthenticationController extends Controller
         }
 
         $otp = rand(100000, 999999);
-        Cache::put('otp_' . $request->phone, $otp, 60);
+        Cache::put('otp_' . $request->phone, $otp, 240);
 
         $msg = <<<MSG
             Your OTP code is {$otp}

@@ -130,7 +130,7 @@
         buttons: [{
                 extend: 'print',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4]
@@ -139,7 +139,7 @@
             {
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4]
@@ -148,7 +148,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4]
@@ -157,7 +157,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4]

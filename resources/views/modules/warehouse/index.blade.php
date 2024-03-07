@@ -99,11 +99,12 @@
                                     <thead>
                                         <tr>
                                             <th>Date/Time</th>
-                                            <th>Cylinder Code</th>
-                                            <th>Size</th>
-                                            <th>Operator Name</th>
-                                            <th>Phone</th>
-                                            <th>Location</th>
+                                            <th>Order ID</th>
+                                            <th>Status</th>
+                                            <th>Dispatch Rider</th>
+                                            <th>Delivery Status</th>
+                                            <th>Customer Pickup Loc.</th>
+                                            <th>Customer Loc.</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -300,7 +301,7 @@
         buttons: [{
                 extend: 'print',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -309,7 +310,7 @@
             {
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -318,7 +319,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -327,7 +328,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -360,16 +361,19 @@
                 data: "date"
             },
             {
-                data: "cylcode"
+                data: "order_id"
             },
             {
-                data: "size"
+                data: "status"
             },
             {
                 data: "name"
             },
             {
-                data: "phone"
+                data: "delivery"
+            },
+            {
+                data: "pickup"
             },
             {
                 data: "location"
@@ -382,7 +386,7 @@
         buttons: [{
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -391,7 +395,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -400,7 +404,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -470,7 +474,7 @@
         buttons: [{
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -479,7 +483,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -488,7 +492,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -540,7 +544,7 @@
         buttons: [{
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -549,7 +553,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -558,7 +562,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -619,7 +623,7 @@
         buttons: [{
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -628,7 +632,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -637,7 +641,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -691,7 +695,7 @@
         buttons: [{
                 extend: 'print',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -700,7 +704,7 @@
             {
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -709,7 +713,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -718,7 +722,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5, 6]
@@ -781,7 +785,7 @@
         buttons: [{
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -790,7 +794,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]
@@ -799,7 +803,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1, 2, 3, 4, 5]

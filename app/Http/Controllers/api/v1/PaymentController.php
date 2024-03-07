@@ -49,15 +49,13 @@ class PaymentController extends Controller
                 ], 401);
             }
 
-            $paymentDetails = CustomerCylinder::select("tblcylinder.weight_id")
-                ->join("tblcylinder", "tblcylinder.cylcode", "tblcustomer_cylinder.cylcode")
-                ->where('tblcustomer_cylinder.order_id', $request->order_id)->get()->toArray();
+            $paymentDetails = CustomerCylinder::select("weight_id")->where('order_id', $request->order_id)->get()->toArray();
             $weightAmt = [];
             // return $paymentDetails;
             if (count($paymentDetails) === 0) {
                 return response()->json([
                     "status" => false,
-                    "message" => "No order available",
+                    "message" => "No order available for payment",
                 ]);
             }
             foreach ($paymentDetails as $payment) {
@@ -87,7 +85,7 @@ class PaymentController extends Controller
                 default => '',
             };
 
-            $transactionId = mt_rand(100000000000, 999999999999);
+            $transactionId = random_int(100000000000, 999999999999);
             $username = env("API_USER");
             $key = env("API_KEY");
             $url = env("APP_URL");
@@ -102,7 +100,7 @@ class PaymentController extends Controller
                 "email" => $user->phone . '@topoil.com',
             ]);
 
-            $curl = curl_init("https://checkout.theteller.net/initiate");
+            $curl = curl_init("https://checkout-test.theteller.net/initiate");
             curl_setopt_array($curl, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_POST => true,

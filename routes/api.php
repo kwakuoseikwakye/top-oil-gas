@@ -195,12 +195,12 @@ Route::resource("employees", EmployeeController::class);
 //Cylinders
 Route::prefix("cylinder")->group(function () {
     Route::get("get_orders", [CylinderController::class, "getOrders"]);
+    Route::post("update_assign", [CylinderController::class, "updateAssignCylinder"]);
+    Route::post("assign", [CylinderController::class, "assignCylinder"]);
     Route::get("customer", [CylinderController::class, "cylinderCustomer"]);
     Route::get("customer/{customer}/{cylinderFrom}/{cylinderTo}", [CylinderController::class, "customerCylinderReport"]);
     Route::get("{cylinderFrom}/{cylinderTo}", [CylinderController::class, "cylinderReport"]);
     Route::get("{cylinder}/{cylinderFrom}/{cylinderTo}", [CylinderController::class, "cylinderCustomerReport"]);
-    Route::post("assign", [CylinderController::class, "assignCylinder"]);
-    Route::post("update_assign", [CylinderController::class, "updateAssignCylinder"]);
     Route::get("trash", [CylinderController::class, "trash"]);
     Route::post("update", [CylinderController::class, "update"]);
     Route::post("delete", [CylinderController::class, "delete"]);

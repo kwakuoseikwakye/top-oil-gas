@@ -10,6 +10,7 @@ use App\Http\Resources\ReturnResource;
 use App\Http\Resources\WarehouseDispatchResource;
 use App\Http\Resources\WarehouseResource;
 use App\Models\Cylinder;
+use App\Models\Dispatch;
 use App\Models\Log as ModelsLog;
 use App\Models\Warehouse;
 use App\Models\WarehouseDispatch;
@@ -111,16 +112,18 @@ class WarehouseController extends Controller
 
     public function fetchDispatch()
     {
-        $data = DB::table("tbldispatch")->select(
+        $data = Dispatch::select(
             "tblvendor.fname",
             "tblvendor.mname",
             "tblvendor.lname",
             "tblvendor.phone",
             "tbldispatch.*",
+            "tblcustomer_location.*",
+            "tblpickup.*"
         )
-            ->join("tblvendor", "tblvendor.vendor_no", "tbldispatch.vendor_no")
-            // ->whereDate("tbldispatch.createdate", "=", date("Y-m-d"))
-            ->where("tbldispatch.deleted","0")
+            ->leftJoin("tblvendor", "tblvendor.vendor_no", "tbldispatch.vendor_no")
+            ->leftJoin("tblcustomer_location", "tblcustomer_location.id", "tbldispatch.location_id")
+            ->leftJoin("tblpickup", "tblpickup.id", "tbldispatch.pickup_location")
             ->orderByDesc("tbldispatch.createdate")
             ->get();
 
@@ -229,15 +232,8 @@ class WarehouseController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                "order_id" => "required",
                 "vendor" => "required",
-                "cylinder" => "required",
-                "location" => "required",
-            ], [
-
-                "vendor.required" => "No vendor name supplied",
-                "cylinder.required" => "No cylinder supplied",
-                "location.required" => "No location supplied",
-
             ]);
 
             if ($validator->fails()) {
@@ -247,39 +243,11 @@ class WarehouseController extends Controller
                 ]);
             }
 
-            $dispatch = DB::table("tbldispatch")->where("deleted", 0)
-            ->where("vendor_no", $request->vendor)
-            ->where("cylcode", $request->cylinder)
-            ->whereDate("createdate","=",date("Y-m-d"))
-            ->first();
-
-            if (!empty($dispatch)) {
-                return response()->json([
-                    "ok" => false,
-                    "msg" => "Vendor already dispatched this cylinder"
-                ]);
-            }
-
-            $cylinder = Cylinder::where("cylcode",$request->cylinder)->first();
-
-            if (empty($cylinder)) {
-                return response()->json([
-                    "ok" => false,
-                    "msg" => "Cylinder does not exist"
-                ]);
-            }
+        
             DB::beginTransaction();
-            $transid = strtoupper(bin2hex(random_bytes(4)));
-            DB::table("tbldispatch")->insert([
-                "transid" => $transid,
-                "cylcode" => $request->cylinder,
+            Dispatch::where('order_id',$request->order_id)->update([
                 "vendor_no" => $request->vendor,
-                "location" => $request->location,
-                "cylinder_size" => $cylinder->size,
-                "createdate" =>  date('Y-m-d H:i:s'),
-                "createuser" => $request->createuser,
-                "deleted" => 0,
-                "dispatch" => 0,
+                "status" => Dispatch::EN_ROUTE
             ]);
 
             $userIp = $request->ip();

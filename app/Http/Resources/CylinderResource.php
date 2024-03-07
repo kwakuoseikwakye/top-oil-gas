@@ -20,10 +20,11 @@ class CylinderResource extends JsonResource
             "barcode" => $this->barcode,
             "cylcode" => $this->cylcode,
             "size" => $this->size,
-            "weight" => $this->weight_id,
+            "weight" => $this->weight,
             "notes" => $this->notes,
-            "amount" => $this->initial_amount,
+            "amount" => $this->amount,
             "images" => $this->images,
+            "requested" => $this->requested ? "<span class='badge badge-danger'>taken</span>" : "<span class='badge badge-success'>available</span>",
         ];
     }
 }

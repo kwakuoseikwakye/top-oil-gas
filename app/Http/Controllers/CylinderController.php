@@ -10,6 +10,8 @@ use App\Models\Allocation;
 use App\Models\Customer;
 use App\Models\CustomerCylinder;
 use App\Models\Cylinder;
+use App\Models\Dispatch;
+use App\Models\Exchange;
 use App\Models\Log as ModelsLog;
 use Exception;
 use Illuminate\Http\Request;
@@ -25,15 +27,27 @@ class CylinderController extends Controller
     {
         $data  = CustomerCylinder::select(
             'tblcustomer_cylinder.*',
-            'tblcylinder_size.*',
-            'tblcustomer_location.*',
-            'tblcustomer.*',
-            'tblcylinder.*'
+            'tblcylinder_size.weight',
+            'tblcylinder_size.amount',
+            'tblcustomer_location.name',
+            'tblcustomer_location.phone1',
+            'tblcustomer_location.phone2',
+            'tblcustomer_location.address',
+            'tblcustomer_location.additional_info',
+            'tblcustomer.custno',
+            'tblcustomer.fname',
+            'tblcustomer.lname',
+            'tblcustomer.phone',
+            'tblcylinder.owner',
+            'tblcylinder.cylcode',
+            'tblcylinder.weight_id',
+            'tblcylinder.location_id',
+            'tblcylinder.requested',
         )
             ->join('tblcustomer', 'tblcustomer.custno', 'tblcustomer_cylinder.custno')
-            ->join('tblcylinder', 'tblcylinder.cylcode', 'tblcustomer_cylinder.cylcode')
-            ->join('tblcustomer_location', 'tblcylinder.location_id', 'tblcustomer_location.id')
-            ->join('tblcylinder_size', 'tblcylinder.weight_id', 'tblcylinder_size.id')
+            ->leftJoin('tblcylinder', 'tblcylinder.cylcode', 'tblcustomer_cylinder.cylcode')
+            ->leftJoin('tblcustomer_location', 'tblcylinder.location_id', 'tblcustomer_location.id')
+            ->leftJoin('tblcylinder_size', 'tblcylinder.weight_id', 'tblcylinder_size.id')
             ->orderByDesc('tblcustomer_cylinder.date_acquired')->get();
 
         return response()->json([
@@ -44,12 +58,12 @@ class CylinderController extends Controller
 
     public function index()
     {
-        // return response()->json([
-        //     'data' => CylinderResource::collection(Cylinder::where("deleted", 0)
-        //         ->orderBy("createdate", "DESC")->get()),
-        // ]);
+        $data = Cylinder::select('tblcylinder.*', 'tblcylinder_size.*')
+            ->join('tblcylinder_size', 'tblcylinder_size.id', 'tblcylinder.weight_id')
+            ->orderBy('tblcylinder.requested', 'asc')
+            ->get();
         return response()->json([
-            'data' => CylinderResource::collection(Cylinder::all()),
+            'data' => CylinderResource::collection($data),
         ]);
     }
 
@@ -255,16 +269,12 @@ class CylinderController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                "customerNo" => "required",
-                "cylinderNo" => "required",
-                "vendorNo" => "required",
+                "custno" => "required",
+                "cylcode" => "required",
+                "transid" => "required",
+                "weight_id" => "required",
+                "orderid" => "required",
                 "createuser" => "required",
-            ], [
-                // This has our own custom error messages for each validation
-                "customerNo.required" => "No customer supplied",
-                "cylinderNo.required" => "No cylinder number supplied",
-                "vendorNo.required" => "No vendor number supplied",
-                "createuser.required" => "No createuser supplied",
             ]);
 
             if ($validator->fails()) {
@@ -275,21 +285,19 @@ class CylinderController extends Controller
             }
 
             DB::beginTransaction();
-            $transid = strtoupper(bin2hex(random_bytes(4)));
-            $cylinder = Cylinder::find($request->cylinderNo);
-
-            DB::table("tblcustomer_cylinder")->insert([
-                "transid" => $transid,
-                "custno" => $request->customerNo,
-                "cylcode" => $cylinder->cylcode,
-                "date_acquired" => date("Y-m-d"),
-                "vendor_no" => $request->vendorNo,
-                "barcode" => $cylinder->barcode,
-                "status" => 1,
-                "deleted" =>  0,
-                "createdate" =>  date("Y-m-d H:i:s"),
-                "createuser" =>  $request->createuser,
+            // $transid = strtoupper(bin2hex(random_bytes(4)));
+            // $cylinder = Cylinder::find($request->cylinderNo);
+            $customerOrder = CustomerCylinder::where("transid", $request->transid)->first();
+            CustomerCylinder::where("transid", $request->transid)->update([
+                "cylcode" => $request->cylcode,
+                // "weight_id" => $request->weight_id,
+                "modifydate" =>  date("Y-m-d H:i:s"),
+                "modifyuser" =>  $request->createuser,
             ]);
+            Cylinder::where('cylcode', $request->cylcode)->update([
+                'requested' => 1,
+                'location_id' => $customerOrder->location_id
+            ]); // Mark the cylinder as requested by someone]);
 
 
             $userIp = $request->ip();
@@ -301,7 +309,7 @@ class CylinderController extends Controller
                 "username" => $request->createuser,
                 "module" => "Cylinder",
                 "action" => "Assignment",
-                "activity" => "Cylinder {$cylinder->cylcode} assigned from Back Office with id successfully",
+                "activity" => "Cylinder {$request->cylcode} assigned from Back Office with id successfully",
                 "ipaddress" => $userIp,
                 "createuser" =>  $request->createuser,
                 "createdate" => gmdate("Y-m-d H:i:s"),
@@ -333,15 +341,12 @@ class CylinderController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                "custno" => "required",
+                "cylcode" => "required",
                 "transid" => "required",
-                "customerNo" => "required",
-                "cylinderNo" => "required",
-                "vendorNo" => "required",
-            ], [
-                // This has our own custom error messages for each validation
-                "customerNo.required" => "No customer supplied",
-                "cylinderNo.required" => "No cylinder number supplied",
-                "vendorNo.required" => "No vendor number supplied",
+                "weight_id" => "required",
+                "orderid" => "required",
+                "createuser" => "required",
             ]);
 
             if ($validator->fails()) {
@@ -352,20 +357,35 @@ class CylinderController extends Controller
             }
 
             DB::beginTransaction();
-            $cylinder = Cylinder::find($request->cylinderNo);
+            $oldcylinder = CustomerCylinder::where('transid', $request->transid)->where('order_id', $request->order_id)->first();
+            $cylinder = Cylinder::where('cylcode', $request->cylcode)->first();
 
-            DB::table("tblcustomer_cylinder")->where("transid", $request->transid)->update([
-                "custno" => $request->customerNo,
-                "cylcode" => $cylinder->cylcode,
-                "date_acquired" => date("Y-m-d"),
-                "vendor_no" => $request->vendorNo,
-                "barcode" => $cylinder->barcode,
-                "status" => 1,
-                "deleted" =>  0,
-                "createdate" =>  date("Y-m-d H:i:s"),
-                "createuser" =>  $request->createuser,
+            CustomerCylinder::where("transid", $request->transid)->update([
+                "cylcode" => $request->cylcode,
+                "modifydate" =>  date("Y-m-d H:i:s"),
+                "modifyuser" =>  $request->createuser,
+            ]);
+            Cylinder::where('cylcode', $request->cylcode)->update([
+                'requested' => 1,
             ]);
 
+            Dispatch::where('transid', $request->transid)->where('order_id', $request->order_id)->update([
+                "location_id" => $cylinder->location_id,
+                "modifydate" =>  date("Y-m-d H:i:s"),
+                "modifyuser" =>  $request->custno,
+            ]);
+
+            Exchange::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "custno" => $request->custno,
+                "order_id" => $request->order_id,
+                "cylcode_old" => $oldcylinder->cylcode,
+                "cylcode_new" => $request->cylcode,
+                "status" => "pending",
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $request->custno,
+            ]);
 
             $userIp = $request->ip();
             $locationData = Location::get($userIp);

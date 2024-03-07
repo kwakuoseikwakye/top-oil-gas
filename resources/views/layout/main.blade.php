@@ -15,7 +15,7 @@
             <div class="aside aside-left aside-fixed d-flex flex-column flex-row-auto" id="kt_aside">
 
                 <!--begin::Brand-->
-                <div class="brand flex-column-auto" id="kt_brand">
+                <div class="brand flex-column-auto" id="kt_brand" style="background-color: white">
                     <!--begin::Logo-->
                     <a href="/" class="brand-logo rounded">
                         <img alt="Logo" class="rounded" style="width:130px; height:60px"

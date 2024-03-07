@@ -34,6 +34,7 @@ class CylinderController extends Controller
 
     public function assignSingleCylinder(Request $request)
     {
+        // return $request->all();
         try {
             $validator = Validator::make($request->all(), [
                 // "date" => "required",
@@ -82,27 +83,27 @@ class CylinderController extends Controller
             }
 
             //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
-            $cylinder = Cylinder::where('weight_id', $request->weight_id)->where('requested', 0)->first()->cylcode;
+            // $cylinder = Cylinder::where('weight_id', $request->weight_id)->where('requested', 0)->first()->cylcode;
 
-            if (empty($cylinder)) {
-                return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
-            }
+            // if (empty($cylinder)) {
+            //     return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
+            // }
 
-            $cylinderExists = CustomerCylinder::where("cylcode", $cylinder)->exists();
-            if ($cylinderExists) {
-                return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
-            }
+            // $cylinderExists = CustomerCylinder::where("cylcode", $cylinder)->exists();
+            // if ($cylinderExists) {
+            //     return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
+            // }
 
             DB::beginTransaction();
             $orderid = strtoupper(bin2hex(random_bytes(6)));
-            Cylinder::where("cylcode", $cylinder)->update([
-                "location_id" => $request->location_id
-            ]);
+            // Cylinder::where("cylcode", $cylinder)->update([
+            //     "location_id" => $request->location_id
+            // ]);
             CustomerCylinder::insert([
                 "transid" => strtoupper(bin2hex(random_bytes(4))),
                 "order_id" => $orderid,
                 "custno" => $user->userid,
-                "cylcode" => $cylinder, //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
+                // "cylcode" => $cylinder, //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
                 "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
                 "location_id" => $request->location_id,
                 "weight_id" => $request->weight_id,
@@ -126,18 +127,18 @@ class CylinderController extends Controller
                 "createuser" =>  $user->userid,
             ]);
 
-            Cylinder::where('cylcode', $cylinder)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
+            // Cylinder::where('cylcode', $cylinder)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
 
             $userIp = $request->ip();
             $locationData = Location::get($userIp);
-            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+            $transid1 = strtoupper(bin2hex(random_bytes(4))); 
 
             ModelsLog::insert([
                 "transid" => $transid1,
                 "username" => $user->userid,
                 "module" => "Cylinder",
                 "action" => "Assignment",
-                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
+                "activity" => "Order  {$orderid} assigned from Mobile with id successfully",
                 "ipaddress" => $userIp,
                 "createuser" =>  $user->userid,
                 "createdate" => gmdate("Y-m-d H:i:s"),
@@ -213,24 +214,24 @@ class CylinderController extends Controller
             DB::beginTransaction();
             $orderid = strtoupper(bin2hex(random_bytes(6)));
             foreach ($request->bulk_items as $item) {
-                $cylinders = Cylinder::where('weight_id', $item['weight_id'])->where('requested', 0)->limit($item['qty'])->get('cylcode');
+                $cylinders = Cylinder::where('weight_id', $item['weight_id'])->limit($item['qty'])->get('cylcode');
 
-                if (count($cylinders) === 0) {
-                    return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
-                }
+                // if (count($cylinders) === 0) {
+                //     return response()->json(['status' => false, 'message' => 'There are no available cylinders'], 406);
+                // }
 
-                $cylinderExists = CustomerCylinder::whereIn("cylcode", $cylinders)->exists();
-                if ($cylinderExists) {
-                    return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
-                }
+                // $cylinderExists = CustomerCylinder::whereIn("cylcode", $cylinders)->exists();
+                // if ($cylinderExists) {
+                //     return response()->json(['status' => false, 'message' => 'Cylinder already assigned to a customer'], 406);
+                // }
                 foreach ($cylinders as $cylinder) {
                     DB::table("tblcustomer_cylinder")->insert([
                         "transid" => strtoupper(bin2hex(random_bytes(4))),
                         "order_id" => $orderid,
                         "custno" => $user->userid,
-                        "cylcode" => $cylinder->cylcode,
-                        "weight_id" => $cylinder->weight_id,
-                        "location_id" => $cylinder->location_id,
+                        // "cylcode" => $cylinder->cylcode,
+                        "weight_id" => $item['weight_id'],
+                        "location_id" => $request->location_id,
                         "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
                         "status" => CustomerCylinder::PENDING,
                         "deleted" =>  0,
@@ -239,16 +240,16 @@ class CylinderController extends Controller
                     ]);
                 }
 
-                Cylinder::whereIn('cylcode', $cylinders)->update([
-                    'requested' => 1,
-                    "location_id" => $request->location_id
-                ]); // Mark the cylinder as requested by someone]);
+                // Cylinder::whereIn('cylcode', $cylinders)->update([
+                //     'requested' => 1,
+                //     "location_id" => $request->location_id
+                // ]); // Mark the cylinder as requested by someone]);
             }
             //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
             Dispatch::insert([
                 "transid" => strtoupper(bin2hex(random_bytes(4))),
                 "order_id" => $orderid,
-                "location_id" => $cylinder->location_id,
+                "location_id" => $request->location_id,
                 "pickup_location" => $request->pickup_id ?? 0,
                 "status" => Dispatch::PENDING,
                 // "dispatch" =>  0,
@@ -266,7 +267,7 @@ class CylinderController extends Controller
                 "username" => $user->userid,
                 "module" => "Cylinder",
                 "action" => "Assignment",
-                "activity" => "Cylinder  {$cylinder} assigned from Mobile with id successfully",
+                "activity" => "Order  {$orderid} assigned from Mobile with id successfully",
                 "ipaddress" => $userIp,
                 "createuser" =>  $user->userid,
                 "createdate" => gmdate("Y-m-d H:i:s"),
@@ -352,12 +353,14 @@ class CylinderController extends Controller
                     return response()->json(['status' => false, 'message' => 'No cylinders are available'], 406);
                 }
 
+                $transid = strtoupper(bin2hex(random_bytes(4)));
                 CustomerCylinder::insert([
-                    "transid" => strtoupper(bin2hex(random_bytes(4))),
+                    "transid" => $transid,
                     "order_id" => $orderid,
                     "custno" => $user->userid,
-                    "cylcode" => $newCylinder->cylcode,
-                    "weight_id" => $newCylinder->weight_id,
+                    // "cylcode" => $newCylinder->cylcode,
+                    "location_id" => $customerCylinder->location_id,
+                    "weight_id" => $customerCylinder->weight_id,
                     "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
                     "status" => CustomerCylinder::PENDING,
                     "deleted" =>  0,
@@ -365,34 +368,34 @@ class CylinderController extends Controller
                     "createuser" =>  $user->userid,
                 ]);
 
-                Cylinder::where('cylcode', $newCylinder->cylcode)->update([
-                    'requested' => 1,
-                    "location_id" => $oldCylinder->location_id
-                ]); // Mark the cylinder as requested by someone]);
+                // Cylinder::where('cylcode', $newCylinder->cylcode)->update([
+                //     'requested' => 1,
+                //     "location_id" => $oldCylinder->location_id
+                // ]); // Mark the cylinder as requested by someone]);
 
                 Cylinder::where('cylcode', $oldCylinder->cylcode)->update([
                     'requested' => 2,
                     "location_id" => null
                 ]); // Now set old cylinder as not requested
 
-                Exchange::insert([
-                    "transid" => strtoupper(bin2hex(random_bytes(4))),
-                    "custno" => $user->userid,
-                    "order_id" => $orderid,
-                    "cylcode_old" => $oldCylinder->cylcode,
-                    "cylcode_new" => $newCylinder->cylcode,
-                    "status" => "pending",
-                    "deleted" =>  0,
-                    "createdate" =>  date("Y-m-d H:i:s"),
-                    "createuser" =>  $user->userid,
-                ]);
+                // Exchange::insert([
+                //     "transid" => strtoupper(bin2hex(random_bytes(4))),
+                //     "custno" => $user->userid,
+                //     "order_id" => $orderid,
+                //     "cylcode_old" => $oldCylinder->cylcode,
+                //     // "cylcode_new" => $newCylinder->cylcode,
+                //     "status" => "pending",
+                //     "deleted" =>  0,
+                //     "createdate" =>  date("Y-m-d H:i:s"),
+                //     "createuser" =>  $user->userid,
+                // ]);
             }
 
             //TODO::Will comment this code later to avoid automatic assignment of cylinders on request
             Dispatch::insert([
-                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "transid" => $transid,
                 "order_id" => $orderid,
-                "location_id" => $newCylinder->location_id,
+                // "location_id" => $newCylinder->location_id,
                 "pickup_location" => $request->pickup_id ?? 0,
                 // "dispatch" =>  0,
                 "status" => Dispatch::PENDING,
@@ -413,7 +416,7 @@ class CylinderController extends Controller
                 "username" => $user->userid,
                 "module" => "Cylinder",
                 "action" => "Assignment",
-                "activity" => "Cylinder  {$newCylinder->cylcode} assigned from Mobile with id successfully",
+                "activity" => "Refill  {$orderid} assigned from Mobile with id successfully",
                 "ipaddress" => $userIp,
                 "createuser" =>  $user->userid,
                 "createdate" => gmdate("Y-m-d H:i:s"),

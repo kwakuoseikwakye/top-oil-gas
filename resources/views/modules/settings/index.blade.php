@@ -114,7 +114,7 @@
         buttons: [{
                 extend: 'print',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -123,7 +123,7 @@
             {
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -132,7 +132,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -141,7 +141,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -249,7 +249,7 @@
         buttons: [{
                 extend: 'print',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -258,7 +258,7 @@
             {
                 extend: 'copy',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -267,7 +267,7 @@
             {
                 extend: 'excel',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]
@@ -276,7 +276,7 @@
             {
                 extend: 'pdf',
                 attr: {
-                    class: "btn btn-sm btn-info rounded-right"
+                    class: "btn btn-sm btn-secondary rounded-right"
                 },
                 exportOptions: {
                     columns: [0, 1]

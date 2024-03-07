@@ -16,7 +16,7 @@ class RouteController extends Controller
         $this->middleware(['auth']);
         // $this->middleware('checkLogin');
     }
-    
+
     public static function permissions($modURL)
     {
         $permissions = collect(DB::table('tblmodule')->select(
@@ -37,24 +37,24 @@ class RouteController extends Controller
 
     public function dashboard()
     {
-        if(strtolower(Auth::user()->usertype) === "admin"){
-            $customerWeekly = DB::table("tblcustomer")->where("deleted",0)
-            ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted",0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted",0)->count();
-            $staff = DB::table("tblstaff")->where("deleted",0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted",0)->count();
+        if (strtolower(Auth::user()->usertype) === "admin") {
+            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
+                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
+            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
+            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
+            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
+            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
             $paid = DB::table("tblpayment")->selectRaw("sum(amount_paid) AS total")
-            ->where("deleted",0)->first();
-            $vendors = DB::table("tblvendor")->where("deleted",0)->get();
-            $petrocellCyl = DB::table("tblcylinder")->where("deleted",0)
-            ->where("owner","Petrocell")->count();
+                ->where("deleted", 0)->first();
+            $vendors = DB::table("tblvendor")->where("deleted", 0)->get();
+            $petrocellCyl = DB::table("tblcylinder")->where("deleted", 0)
+                ->where("owner", "Petrocell")->count();
 
-            $customerCyl = DB::table("tblcylinder")->where("deleted",0)
-            ->where("owner","Customer")->count();
+            $customerCyl = DB::table("tblcylinder")->where("deleted", 0)
+                ->where("owner", "Customer")->count();
             $totalOrders = CustomerCylinder::distinct('order_id')->count();
             // $cylinders 
-            return view('main_dashboard',[
+            return view('main_dashboard', [
                 "totalOrders" => $totalOrders,
                 "cus" => $customerWeekly,
                 "customers" => $customers,
@@ -67,15 +67,15 @@ class RouteController extends Controller
                 "petrocellCyl" => $petrocellCyl,
             ]);
         }
-        if(strtolower(Auth::user()->usertype) === "vendor"){
-            $customerWeekly = DB::table("tblcustomer")->where("deleted",0)
-            ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted",0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted",0)->count();
-            $staff = DB::table("tblstaff")->where("deleted",0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted",0)->count();
+        if (strtolower(Auth::user()->usertype) === "vendor") {
+            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
+                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
+            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
+            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
+            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
+            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
             // $cylinders 
-            return view('vendor_dashboard',[
+            return view('vendor_dashboard', [
                 "cus" => $customerWeekly,
                 "customers" => $customers,
                 "vendors" => $vendor,
@@ -83,15 +83,15 @@ class RouteController extends Controller
                 "cylinders" => $cylinders,
             ]);
         }
-        if(strtolower(Auth::user()->usertype) === "warehouse"){
-            $customerWeekly = DB::table("tblcustomer")->where("deleted",0)
-            ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted",0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted",0)->count();
-            $staff = DB::table("tblstaff")->where("deleted",0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted",0)->count();
+        if (strtolower(Auth::user()->usertype) === "warehouse") {
+            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
+                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
+            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
+            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
+            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
+            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
             // $cylinders 
-            return view('vendor_dashboard',[
+            return view('vendor_dashboard', [
                 "cus" => $customerWeekly,
                 "customers" => $customers,
                 "vendors" => $vendor,
@@ -99,15 +99,15 @@ class RouteController extends Controller
                 "cylinders" => $cylinders,
             ]);
         }
-        if(strtolower(Auth::user()->usertype) === "staff"){
-            $customerWeekly = DB::table("tblcustomer")->where("deleted",0)
-            ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted",0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted",0)->count();
-            $staff = DB::table("tblstaff")->where("deleted",0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted",0)->count();
+        if (strtolower(Auth::user()->usertype) === "staff") {
+            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
+                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
+            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
+            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
+            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
+            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
             // $cylinders 
-            return view('vendor_dashboard',[
+            return view('vendor_dashboard', [
                 "cus" => $customerWeekly,
                 "customers" => $customers,
                 "vendors" => $vendor,
@@ -115,14 +115,13 @@ class RouteController extends Controller
                 "cylinders" => $cylinders,
             ]);
         }
-       
     }
 
     public function vendors()
     {
-        $vendors = DB::table("tblvendor")->where("deleted",0)->get();
-        return view('modules.vendor.index',[
-            "vends" => $vendors 
+        $vendors = DB::table("tblvendor")->where("deleted", 0)->get();
+        return view('modules.vendor.index', [
+            "vends" => $vendors
         ]);
     }
 
@@ -139,7 +138,7 @@ class RouteController extends Controller
         $customer = DB::table("tblcustomer")->get();
         $size = DB::table("tblcylinder_size")->get();
         $vendors = DB::table("tblvendor")->get();
-        return view('modules.customer.index',[
+        return view('modules.customer.index', [
             "cylinder" => $cylinders,
             "size" => $size,
             "customer" => $customer,
@@ -148,10 +147,10 @@ class RouteController extends Controller
 
     public function customersReport()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customer = DB::table("tblcustomer")->where("deleted",0)->get();
-        $size = DB::table("tblcylinder_size")->where("deleted",0)->get();
-        return view('modules.reports.customer.index',[
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->get();
+        $customer = DB::table("tblcustomer")->where("deleted", 0)->get();
+        $size = DB::table("tblcylinder_size")->where("deleted", 0)->get();
+        return view('modules.reports.customer.index', [
             "cylinder" => $cylinders,
             "size" => $size,
             "customer" => $customer,
@@ -161,30 +160,33 @@ class RouteController extends Controller
 
     public function cylinders()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customer = DB::table("tblcustomer")->where("deleted",0)->get();
-        $vendor = DB::table("tblvendor")->where("deleted",0)->get();
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->where("requested", 0)->get();
+        $customer = DB::table("tblcustomer")->where("deleted", 0)->get();
+        $vendor = DB::table("tblvendor")->where("deleted", 0)->get();
         $weights = DB::table("tblcylinder_size")->get();
-        return view('modules.cylinder.index',
-        [
-            "cylinder" => $cylinders,
-            "vendor" => $vendor,
-            "weights" => $weights,
-            "customer" => $customer,]
+        return view(
+            'modules.cylinder.index',
+            [
+                "cylinder" => $cylinders,
+                "vendor" => $vendor,
+                "weights" => $weights,
+                "customer" => $customer,
+            ]
         );
     }
 
     public function cylinderReport()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customer = DB::table("tblcustomer")->where("deleted",0)->get();
-        $vendor = DB::table("tblvendor")->where("deleted",0)->get();
-        return view('modules.reports.cylinder.index',
-        [
-            "cylinder" => $cylinders,
-            "vendor" => $vendor,
-            "customer" => $customer,
-            "permissions" => $this->permissions('reports'),
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->get();
+        $customer = DB::table("tblcustomer")->where("deleted", 0)->get();
+        $vendor = DB::table("tblvendor")->where("deleted", 0)->get();
+        return view(
+            'modules.reports.cylinder.index',
+            [
+                "cylinder" => $cylinders,
+                "vendor" => $vendor,
+                "customer" => $customer,
+                "permissions" => $this->permissions('reports'),
             ]
         );
     }
@@ -203,11 +205,11 @@ class RouteController extends Controller
 
     public function warehouse()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $vendor = DB::table("tblvendor")->where("deleted",0)->get();
-        $staff = DB::table("tblwarehouse")->where("deleted",0)->get();
-        $location = DB::table("tblroute")->where("deleted",0)->get();
-        return view('modules.warehouse.index',[
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->get();
+        $vendor = DB::table("tblvendor")->where("deleted", 0)->get();
+        $staff = DB::table("tblwarehouse")->where("deleted", 0)->get();
+        $location = DB::table("tblroute")->where("deleted", 0)->get();
+        return view('modules.warehouse.index', [
             "staff" => $staff,
             "vendor" => $vendor,
             "cylinders" => $cylinders,
@@ -217,11 +219,11 @@ class RouteController extends Controller
 
     public function warehouseReport()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customers = DB::table("tblcustomer")->where("deleted",0)->get();
-        $vendor = DB::table("tblvendor")->where("deleted",0)->get();
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->get();
+        $customers = DB::table("tblcustomer")->where("deleted", 0)->get();
+        $vendor = DB::table("tblvendor")->where("deleted", 0)->get();
 
-        return view('modules.reports.warehouse.index',[
+        return view('modules.reports.warehouse.index', [
             "customers" => $customers,
             "vendor" => $vendor,
             "cylinders" => $cylinders,
@@ -236,15 +238,15 @@ class RouteController extends Controller
 
     public function employees()
     {
-        $role = DB::table("tblrole")->where("deleted",0)->get();
-        return view('modules.employees.index',[
+        $role = DB::table("tblrole")->where("deleted", 0)->get();
+        return view('modules.employees.index', [
             "role" => $role,
         ]);
     }
 
     public function employeesReport()
     {
-         return view('modules.reports.employees.index',[
+        return view('modules.reports.employees.index', [
             "permissions" => $this->permissions('reports'),
         ]);
     }
@@ -256,14 +258,14 @@ class RouteController extends Controller
 
     public function usersReport()
     {
-        $users = User::where("deleted",0)->get();
-      
+        $users = User::where("deleted", 0)->get();
+
         return view('modules.reports.users.index', [
             "users" => $users,
             "permissions" => $this->permissions('reports'),
         ]);
     }
-    
+
     public function payment()
     {
         return view('modules.payment.index');
@@ -271,8 +273,8 @@ class RouteController extends Controller
 
     public function salesReport()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted",0)->get();
-        $customers = DB::table("tblcustomer")->where("deleted",0)->get();
+        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->get();
+        $customers = DB::table("tblcustomer")->where("deleted", 0)->get();
 
         return view('modules.reports.payment.index', [
             "cylinders" => $cylinders,
@@ -284,8 +286,8 @@ class RouteController extends Controller
     public function settings()
     {
         return view('modules.settings.index');
-    }   
-    
+    }
+
     public function dispatchReturns()
     {
         return view('modules.dispatch');
