@@ -134,7 +134,7 @@ class AuthenticationController extends Controller
             DB::commit();
 
             $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, 240);
+            Cache::put('otp_' . $request->phone, $otp, 600);
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -268,7 +268,7 @@ class AuthenticationController extends Controller
         }
 
         $otp = rand(100000, 999999);
-        Cache::put('otp_' . $request->phone, $otp, 240);
+        Cache::put('otp_' . $request->phone, $otp, 600);
 
         $msg = <<<MSG
             Your OTP code is {$otp}
