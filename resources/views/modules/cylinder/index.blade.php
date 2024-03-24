@@ -15,13 +15,12 @@
                             </h3>
                         </div>
                         <div class="card-toolbar">
-
-                            <!--begin::Button-->
+                            <a class="btn btn-light-warning font-weight-bolder" data-toggle="modal"
+                                data-target="#order-cylinder-modal">
+                                Order Cylinder</a>
                             <a data-toggle="modal" data-target="#add-cylinder-modal"
-                                class="btn btn-primary font-weight-bolder">
+                                class="btn btn-light-warning font-weight-bolder">
                                 Add Cylinder</a>
-                            {{-- <a onclick="errors()" class="btn btn-primary font-weight-bolder">
-                                Merge Customer Cylinder</a> --}}
                             <!--end::Button-->
                         </div>
                     </div>
@@ -60,7 +59,7 @@
                                                 <th>Customer</th>
                                                 <th>Cylinder Code</th>
                                                 <th>Date</th>
-                                                <th>Weight</th>
+                                                <th>Amount/Weight</th>
                                                 <th>Request</th>
                                                 <th>Location</th>
                                                 <th>Status</th>
@@ -125,12 +124,13 @@
         <!--end::Entry-->
     </div>
     {{-- @include('modules.cylinder.modals.file_upload') --}}
-    @include('modules.cylinder.modals.add_cylinder')
+    @include('modules.cylinder.modals.order_cylinder')
     @include('modules.cylinder.modals.update_cylinder')
     @include('modules.cylinder.modals.assign_cylinder')
     @include('modules.cylinder.modals.update_assign_cylinder')
+    {{-- @include('modules.cylinder.modals.add_cylinder')
     @include('modules.cylinder.modals.info_assign')
-    @include('modules.cylinder.modals.info')
+    @include('modules.cylinder.modals.info') --}}
 
     <script>
         var orderTable = $('#order-table').DataTable({
@@ -333,12 +333,11 @@
         $("#order-table").on("click", ".assign-cylinder-btn", function() {
             let data = orderTable.row($(this).parents('tr')).data();
 
-            $("#assign-cylinder-modal").modal("show");
             $("#assign-cylinder-transid").val(data.transid);
             $("#assign-cylinder-custno").val(data.custno);
             $("#assign-cylinder-orderid").val(data.order_id);
             $("#assign-cylinder-weight").val(data.weight_id);
-           
+
             //populate cylinder
             let filteredCylinders = [];
             cylinders.forEach(cylinder => {
@@ -350,20 +349,89 @@
                 }
             });
 
-            $("#assign-customer-cylinder").empty();
-            let fetchCylinders = document.getElementById('assign-customer-cylinder');
-            fetchCylinders.innerHTML = null;
+            // $("#assign-customer-cylinder").empty();
+            let fetchCylindersId = document.getElementById('assign-customer-cylinder');
+            $(fetchCylindersId).empty();
 
-            let defaultOption = document.createElement("option");
-            defaultOption.value = "";
-            defaultOption.innerText = "-- Select --";
-
-            fetchCylinders.appendChild(defaultOption);
-
-            $("#assign-customer-cylinder").select2({
-                data: filteredCylinders
+            // Append data to the select element
+            $(fetchCylindersId).selectpicker('destroy');
+            $(fetchCylindersId).selectpicker({
+                liveSearch: true,
+                liveSearchNormalize: true,
+                title: '--Select--',
+                noneResultsText: 'No results matched {0}',
+                noneSelectedText: '--Select--',
             });
+
+            filteredCylinders.forEach(function(loc) {
+                $(fetchCylindersId).append(new Option(loc.text, loc.id));
+            });
+            $(fetchCylindersId).selectpicker('refresh');
+
+            $("#assign-cylinder-modal").modal("show");
         });
+
+        let locations = @json($customerLocations);
+        var orderCylinderCustomerId = document.getElementById('order-cylinder-customer');
+        $(orderCylinderCustomerId).on('change', function() {
+            var selectedIndex = $(this).prop('selectedIndex');
+            var selectedOption = $(this).children('option').eq(selectedIndex);
+            var selectedValue = selectedOption.val();
+
+            let filteredLoc = [];
+            locations.forEach(location => {
+                if (location.custno == selectedValue) {
+                    filteredLoc.push({
+                        "id": location.id,
+                        "text": location.name
+                    });
+                }
+            });
+
+            $('#order-cylinder-location').empty();
+
+            // Append data to the select element
+            $('#order-cylinder-location').selectpicker('destroy');
+            $('#order-cylinder-location').selectpicker({
+                liveSearch: true,
+                liveSearchNormalize: true,
+                title: '--Select--',
+                noneResultsText: 'No results matched {0}',
+                noneSelectedText: '--Select--',
+            });
+
+            filteredLoc.forEach(function(loc) {
+                $('#order-cylinder-location').append(new Option(loc.text, loc.id));
+            });
+            $('#order-cylinder-location').selectpicker('refresh');
+        });
+        // $(orderCylinderCustomerId).on("select2:select", function(e) {
+        //     let selected = e.params.data.id;
+        //     alert("helloWorld");
+        //     alert(selected);
+        //     let filteredLoc = [];
+        //     locations.forEach(location => {
+        //         if (location.custno === selected) {
+        //             filteredLoc.push({
+        //                 "id": location.id,
+        //                 "text": location.name
+        //             });
+        //         }
+        //     });
+
+        //     let fetchLocationId = document.getElementById('order-cylinder-location');
+        //     fetchLocationId.innerHTML = null;
+
+        //     let defaultOption = document.createElement("option");
+        //     defaultOption.value = "";
+        //     defaultOption.innerText = "-- Select --";
+
+        //     fetchLocationId.appendChild(defaultOption);
+
+        //     $(fetchLocationId).select2({
+        //         data: filteredLoc
+        //     });
+        // });
 
         $("#order-table").on("click", ".refil-cylinder-btn", function() {
             let data = orderTable.row($(this).parents('tr')).data();
@@ -373,7 +441,7 @@
             $("#update-assign-cylinder-custno").val(data.custno);
             $("#update-assign-cylinder-orderid").val(data.order_id);
             $("#update-assign-cylinder-weight").val(data.weight_id);
-           
+
             //populate cylinder
             let filteredCylinders = [];
             cylinders.forEach(cylinder => {
@@ -385,19 +453,26 @@
                 }
             });
 
-            $("#assign-customer-cylinder").empty();
-            let fetchCylinders = document.getElementById('assign-customer-cylinder');
-            fetchCylinders.innerHTML = null;
+            // $("#assign-customer-cylinder").empty();
+            let fetchCylindersIds = document.getElementById('update-assign-customer-cylinder');
+            $(fetchCylindersIds).empty();
 
-            let defaultOption = document.createElement("option");
-            defaultOption.value = "";
-            defaultOption.innerText = "-- Select --";
-
-            fetchCylinders.appendChild(defaultOption);
-
-            $("#update-assign-customer-cylinder").select2({
-                data: filteredCylinders
+            // Append data to the select element
+            $(fetchCylindersIds).selectpicker('destroy');
+            $(fetchCylindersIds).selectpicker({
+                liveSearch: true,
+                liveSearchNormalize: true,
+                title: '--Select--',
+                noneResultsText: 'No results matched {0}',
+                noneSelectedText: '--Select--',
             });
+
+            filteredCylinders.forEach(function(loc) {
+                $(fetchCylindersIds).append(new Option(loc.text, loc.id));
+            });
+            $(fetchCylindersIds).selectpicker('refresh');
+
+            $("#update-assign-cylinder-modal").modal("show");
         });
 
         $("#cylinder-table").on("click", ".edit-btn", function() {
@@ -523,22 +598,22 @@
         //             data: null,
         //             defaultContent: `
 
-        //         <button type='button' data-row-transid='$this->transid'
-        //         rel='tooltip' class='btn btn-primary btn-sm view-btn'>
-        //             <i class='fas fa-eye'></i>
-        //         </button>
+    //         <button type='button' data-row-transid='$this->transid'
+    //         rel='tooltip' class='btn btn-primary btn-sm view-btn'>
+    //             <i class='fas fa-eye'></i>
+    //         </button>
 
-        //         <button type='button' data-row-transid='$this->transid'
-        //         rel='tooltip' class='btn btn-success btn-sm edit-btn'>
-        //            <i class='fas fa-edit'></i>
-        //         </button>
+    //         <button type='button' data-row-transid='$this->transid'
+    //         rel='tooltip' class='btn btn-success btn-sm edit-btn'>
+    //            <i class='fas fa-edit'></i>
+    //         </button>
 
-        //         <button type='button' data-row-transid='$this->transid'
-        //         rel='tooltip' class='btn btn-danger btn-sm delete-btn'>
-        //            <i class='fas fa-trash'></i>
-        //         </button>
-                
-        //         `
+    //         <button type='button' data-row-transid='$this->transid'
+    //         rel='tooltip' class='btn btn-danger btn-sm delete-btn'>
+    //            <i class='fas fa-trash'></i>
+    //         </button>
+
+    //         `
         //         },
         //     ],
         //     // "columnDefs": [{

@@ -66,6 +66,7 @@ class PaymentController extends Controller
                     // return $quantity;
                     $amountForPayment = (int)$quantity * (int)$cylinderSize->amount;
                     $weightAmt[] = $amountForPayment;
+                    
                 } else {
                     return response()->json([
                         "status" => false,
@@ -89,6 +90,17 @@ class PaymentController extends Controller
             $username = env("API_USER");
             $key = env("API_KEY");
             $url = env("APP_URL");
+
+            $customer = CustomerCylinder::where('order_id', $request->order_id)->first();
+            Payment::insert([//TODO: must remove when we go live
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "transaction_id" => $transactionId,
+                "amount_paid" => $amt,
+                "order_id" => $request->order_id,
+                "custno" => $customer->custno,
+                "status" => Payment::PENDING,
+                "payment_mode" => "online",
+            ]);
 
             $credentials = base64_encode($username . ':' . $key);
             $payload = json_encode([
@@ -128,14 +140,14 @@ class PaymentController extends Controller
                 ]);
             }
 
-            Payment::insert([
-                "transid" => strtoupper(bin2hex(random_bytes(4))),
-                "transaction_id" => $transactionId,
-                "amount_paid" => $amt,
-                "order_id" => $request->order_id,
-                "status" => Payment::PENDING,
-                "payment_mode" => "online",
-            ]);
+            // Payment::insert([
+            //     "transid" => strtoupper(bin2hex(random_bytes(4))),
+            //     "transaction_id" => $transactionId,
+            //     "amount_paid" => $amt,
+            //     "order_id" => $request->order_id,
+            //     "status" => Payment::PENDING,
+            //     "payment_mode" => "online",
+            // ]);
 
             return response()->json([
                 "status" => true,

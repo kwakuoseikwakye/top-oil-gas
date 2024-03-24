@@ -160,15 +160,23 @@ class RouteController extends Controller
 
     public function cylinders()
     {
-        $cylinders = DB::table("tblcylinder")->where("deleted", 0)->where("requested", 0)->get();
+        $cylinders = DB::table("tblcylinder")->where("requested", 0)->get();
+        $cylinderWeight = DB::table("tblcylinder")->select('tblcylinder.cylcode', 'tblcylinder_size.weight', 'tblcylinder_size.amount')
+            ->join("tblcylinder_size", "tblcylinder_size.id", "tblcylinder.weight_id")
+            ->where("tblcylinder.requested", 0)->get();
         $customer = DB::table("tblcustomer")->where("deleted", 0)->get();
+        $customerLocations = DB::table("tblcustomer_location")->get();
         $vendor = DB::table("tblvendor")->where("deleted", 0)->get();
+        $pickup = DB::table("tblpickup")->get();
         $weights = DB::table("tblcylinder_size")->get();
         return view(
             'modules.cylinder.index',
             [
+                "customerLocations" => $customerLocations,
+                "cylinderWeight" => $cylinderWeight,
                 "cylinder" => $cylinders,
                 "vendor" => $vendor,
+                "pickup" => $pickup,
                 "weights" => $weights,
                 "customer" => $customer,
             ]

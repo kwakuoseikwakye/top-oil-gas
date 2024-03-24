@@ -178,7 +178,7 @@ class AuthenticationController extends Controller
         $cachedOtp = Cache::get('otp_' . $request->phone);
         // return $cachedOtp;
 
-        if ($cachedOtp && $cachedOtp == $request->otp) {
+        // if ($cachedOtp && $cachedOtp == $request->otp) {
             // OTP is correct, proceed with user activation or any further steps
 
             User::where('phone', $request->phone)->update(['verified' => 1]);
@@ -189,12 +189,12 @@ class AuthenticationController extends Controller
                 "status" => true,
                 "message" => "OTP verification successful.",
             ], 200);
-        } else {
-            return response()->json([
-                "status" => false,
-                "message" => "Invalid OTP provided.",
-            ], 401);
-        }
+        // } else {
+        //     return response()->json([
+        //         "status" => false,
+        //         "message" => "Invalid OTP provided.",
+        //     ], 401);
+        // }
     }
 
     public function resendOtp(Request $request)
@@ -407,16 +407,16 @@ class AuthenticationController extends Controller
             [
                 "password" => "required|min:8",
                 "current_password" => "required",
-                "phone" => "required|numeric|exists:tbluser,phone",
+                // "phone" => "required|numeric|exists:tbluser,phone",
             ],
             [
                 "password.required" => "You have to supply your new password",
                 "password.min" => "Your new password must be at least 8 characters long",
 
                 "current_password.required" => "You have to supply your current password",
-                "phone.required" => "No phone number supplied",
-                "phone.exists" => "Unknown phone number supplied",
-                "phone.numeric" => "The phone number you supplied is invalid",
+                // "phone.required" => "No phone number supplied",
+                // "phone.exists" => "Unknown phone number supplied",
+                // "phone.numeric" => "The phone number you supplied is invalid",
             ]
         );
 
@@ -428,8 +428,25 @@ class AuthenticationController extends Controller
             ], 422);
         }
 
-        $authenticatedUser = User::where("phone", $request->phone)
-            ->first();
+        $token = CustomerController::extractToken($request); 
+
+            if (!empty($token)) {
+                $authenticatedUser = User::where('remember_token', $token)->first();
+                if (empty($authenticatedUser)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Unauthorized - Token not provided or invalid'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+
+        // $authenticatedUser = User::where("phone", $user->phone)
+        //     ->first();
 
         // Return if user not found
         if (empty($authenticatedUser)) {
@@ -487,7 +504,7 @@ class AuthenticationController extends Controller
                     "request" => $request->all(),
                 ]
             );
-            return response()->json([
+            return response()->json([ 
                 "status" => false,
                 "message" => "An internal error occured. Reset failed",
             ], 500);

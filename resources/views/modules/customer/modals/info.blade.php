@@ -26,26 +26,6 @@
                                         Customer Number:
                                         <span id="info-customer-number"></span>
                                     </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Gender:
-                                        <span id="info-customer-gender"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Occupation:
-                                        <span id="info-customer-occupation"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                       Marital Status:
-                                        <span id="info-customer-marital-status"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                       Date of Birth:
-                                        <span id="info-customer-dob"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Place of Birth:
-                                        <span id="info-customer-pob"></span>
-                                    </li>
                                 </ul>
                                 <br>
                                 <h6 class="text-left text-primary"><u>CONTACT</u></h6>
@@ -53,37 +33,6 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         Phone:
                                         <span id="info-customer-phone"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Email:
-                                        <span id="info-customer-email"></span>
-                                    </li>
-                                </ul>
-                                <h6 class="text-left text-primary"><u>LOCATION</u></h6>
-                                <ul class="list-group list-group-flush">
-                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Region:
-                                        <span id="info-customer-region"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Town:
-                                        <span id="info-customer-town"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Streetname:
-                                        <span id="info-customer-streetname"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Landmark:
-                                        <span id="info-customer-landmark"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        GPS Address:
-                                        <span id="info-customer-gpsaddress"></span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Coordinates:
-                                        <span id="info-customer-coordinates"></span>
                                     </li>
                                 </ul>
                             </div>
@@ -101,7 +50,6 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                        <img alt="ID's photo" class="rounded-circle" id="info-customer-id-image">             
                                     </li>
-                                   
                                 </ul>
                             </div>
                         </div>

@@ -1,7 +1,7 @@
 <!-- Modal-->
 <div class="modal fade" id="update-assign-cylinder-modal" tabindex="-1" role="dialog" aria-labelledby="staticBackdrop"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-md" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">Cylinder Refill</h5>
@@ -16,17 +16,19 @@
                     <input type="text" name="custno" id="update-assign-cylinder-custno" required hidden>
                     <input type="text" name="order_id" id="update-assign-cylinder-orderid" required hidden>
                     <input type="text" name="weight_id" id="update-assign-cylinder-weight" required hidden>
-                    <label for="">Cylinder<span class="text-danger">*</span></label>
-                    <div class="col mt-3">
-                        <select name="cylcode" class="form-control" id="update-assign-customer-cylinder" required>
-
-                        </select>
+                    <div class="row">
+                        <div class="col">
+                            <label for="">Cylinder</label>
+                            <select name="cylcode" class="form-control" id="update-assign-customer-cylinder" required>
+    
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-primary font-weight-bold" data-dismiss="modal">Close</button>
-                <button type="submit" form="update-assign-cylinder-form" class="btn btn-primary font-weight-bold">Save</button>
+                <button type="button" class="btn btn-light-warning font-weight-bold" data-dismiss="modal">Close</button>
+                <button type="submit" form="update-assign-cylinder-form" class="btn btn-warning font-weight-bold">Save</button>
             </div>
         </div>
     </div>

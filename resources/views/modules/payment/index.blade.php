@@ -31,8 +31,9 @@
                             <thead>
                                 <tr>
                                     <th>Customer</th>
-                                    <th>Cylinder</th>
-                                    <th>Barcode</th>
+                                    <th>Order ID</th>
+                                    <th>Status</th>
+                                    <th>Transaction</th>
                                     <th>Payment mode</th>
                                     <th>Amount Paid</th>
                                 </tr>
@@ -65,10 +66,13 @@
                 data: "name"
             },
             {
-                data: "cylcode"
+                data: "order_id"
             },
             {
-                data: "barcode"
+                data: "status"
+            },
+            {
+                data: "transaction"
             },
             {
                 data: "mode"

@@ -20,11 +20,6 @@
                                 id="edit-customer-fname">
                         </div>
                         <div class="col">
-                            <label for="">Middle Name</label>
-                            <input type="text" name="middleName" class="form-control form-control-sm"
-                                id="edit-customer-mname">
-                        </div>
-                        <div class="col">
                             <label for="">Surname <span class="text-danger">*</span></label>
                             <input type="text" name="lastName" placeholder="Doe" class="form-control form-control-sm"
                                 id="edit-customer-lname" required>
@@ -33,137 +28,26 @@
 
                     <div class="row mt-3">
                         <div class="col">
-                            <label for="">Gender <span class="text-danger">*</span></label>
-                            <select name="gender" class="form-control select2" id="edit-customer-gender" required>
-                                <option value="m">Male</option>
-                                <option value="f">Female</option>
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label for="">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" placeholder="john@example.com"
-                                class="form-control form-control-sm" id="edit-customer-email" required>
-                        </div>
-                        <div class="col">
                             <label for="">Phone <span class="text-danger">*</span></label>
                             <input type="text" min="10" name="phoneNumber" placeholder="0555555555"
                                 class="form-control form-control-sm" id="edit-customer-phone" required>
                         </div>
-                    </div>
-
-                    <div class="row mt-3">
                         <div class="col">
-                            <label for="">Title <span class="text-danger">*</span></label>
-                            <select name="title" class="form-control select2" id="edit-customer-title" required>
-                                <option value="Mr">Mr</option>
-                                <option value="Mrs">Mrs</option>
-                                <option value="Ms">Ms</option>
-                                <option value="Dr">Dr</option>
-                                <option value="Alhaji">Alhaji</option>
-                                <option value="Hajia">Hajia</option>
-                                <option value="Prof">Prof</option>
-                            </select>
-                        </div>
-
-
-                        <div class="col">
-                            <label for="">Date Of Birth <span class="text-danger">*</span></label>
-                            <input type="date" name="dateOfBirth" placeholder="Doe" class="form-control form-control-sm"
-                                id="edit-customer-dob" required>
-                        </div>
-
-                        <div class="col">
-                            <label for="">Marital Status <span class="text-danger">*</span></label>
-                            <select name="maritalStatus" class="form-control select2" id="edit-customer-marital"
-                                required>
-                                <option value="married">Married</option>
-                                <option value="single">Single</option>
-                                <option value="divorced">Divorced</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label for="">GPS Address <span class="text-danger">*</span></label>
-                            <input type="text" name="gpsaddress" class="form-control form-control-sm"
-                                id="edit-customer-gps" required>
-                        </div>
-                        <div class="col">
-                            <label for="">Street Name <span class="text-danger">*</span></label>
-                            <input type="text" name="streetName" class="form-control form-control-sm"
-                                id="edit-customer-streetname" required>
-                        </div>
-                        <div class="col">
-                            <label for="">Landmark <span class="text-danger">*</span></label>
-                            <input type="text" name="landmark" class="form-control form-control-sm"
-                                id="edit-customer-landmark" required>
-                        </div>
-                    </div>
-
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label for="">Region <span class="text-danger">*</span></label>
-                            <select name="region" class="form-control select2" id="edit-customer-region" required>
-                                <option value="Oti Region">Oti Region</option>
-                                <option value="Bono East Region">Bono East</option>
-                                <option value="Ahafo Region">Ahafo</option>
-                                <option value="Bono Region">Bono</option>
-                                <option value="North East Region">North East</option>
-                                <option value="Savannah Region">Savannah</option>
-                                <option value="Western North Region">Western North</option>
-                                <option value="Western Region">Western</option>
-                                <option value="Volta Region">Volta</option>
-                                <option value="Greater Accra Region">Greater Accra</option>
-                                <option value="Eastern Region">Eastern</option>
-                                <option value="Ashanti Region">Ashanti</option>
-                                <option value="Central Region">Central</option>
-                                <option value="Northern Region">Northern</option>
-                                <option value="Upper East Region">Upper East</option>
-                                <option value="Upper West Region">Upper West</option>
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label for="">Town <span class="text-danger">*</span></label>
-                            <input type="text" name="town" class="form-control form-control-sm" id="edit-customer-town"
-                                required>
-                        </div>
-                        <div class="col">
-                            <label for="">Home Address <span class="text-danger">*</span></label>
-                            <input type="text" name="homeAddress" class="form-control form-control-sm"
-                                id="edit-customer-address" required>
-                        </div>
-                    </div>
-
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label for="">Occupation </label>
-                            <input type="text" name="occupation" class="form-control form-control-sm"
-                                id="edit-customer-occupation">
-                        </div>
-                        <div class="col">
-                            <label for="">Longitude</label>
-                            <input type="text" name="longitude" class="form-control form-control-sm"
-                                id="edit-customer-long">
-                        </div>
-
-                        <div class="col">
-                            <label for="">Latitude</label>
-                            <input type="text" name="latitude" class="form-control form-control-sm"
-                                id="edit-customer-lat" required>
+                            <label for="">Picture </label>
+                            <input type="file" name="image" class="form-control form-control-sm">
                         </div>
                     </div>
 
                     <div class="row mt-3">
                         <div class="col">
                             <label for="">ID Type <span class="text-danger">*</span></label>
-                            <select name="idType" class="form-control select2" id="edit-customer-idtype" required>
-                                <option value="Voters Card">Voters Card</option>
+                            <select name="idType" class="form-control form-control-sm select-input" id="edit-customer-idtype" required>
                                 <option value="Ghana Card">Ghana Card</option>
-                                <option value="Passport">Passport</option>
+                                {{-- <option value="Voters Card">Voters Card</option> --}}
+                                {{-- <option value="Passport">Passport</option>
                                 <option value="Drivers Licence">Drivers Licence</option>
                                 <option value="NHIS">NHIS</option>
-                                <option value="SSNIT">SSNIT</option>
+                                <option value="SSNIT">SSNIT</option> --}}
                             </select>
                         </div>
                         <div class="col">
@@ -171,28 +55,19 @@
                             <input type="text" name="idNumber" id="edit-customer-idno"
                                 class="form-control form-control-sm" required>
                         </div>
+                    </div>
+
+                    <div class="row mt-3">
                         <div class="col">
                             <label for="">Upload ID Card</label>
                             <input type="file" accept="jpeg/png" name="idimage" class="form-control form-control-sm">
                         </div>
                     </div>
-
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label for="">Place Of Birth</label>
-                            <input type="text" name="placeOfBirth" placeholder="John"
-                                class="form-control form-control-sm" id="edit-customer-pob">
-                        </div>
-                        <div class="col">
-                            <label for="">Picture </label>
-                            <input type="file" name="image" class="form-control form-control-sm">
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-primary font-weight-bold" data-dismiss="modal">Close</button>
-                <button type="submit" form="edit-customer-form" class="btn btn-primary font-weight-bold">Save</button>
+                <button type="button" class="btn btn-light-warning font-weight-bold" data-dismiss="modal">Close</button>
+                <button type="submit" form="edit-customer-form" class="btn btn-warning font-weight-bold">Update</button>
             </div>
         </div>
     </div>

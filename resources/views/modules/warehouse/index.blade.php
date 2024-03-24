@@ -138,7 +138,7 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane fade show" id="out" role="tabpanel" aria-labelledby="out-tab">
+                        {{-- <div class="tab-pane fade show" id="out" role="tabpanel" aria-labelledby="out-tab">
                             <div class="table-responsive mt-3">
                                 <table width="100%"
                                     class="table table-bordered table-sm table-hover dataTable js-exportable"
@@ -158,7 +158,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="tab-pane fade show" id="wd" role="tabpanel" aria-labelledby="wd-tab">
                             <div class="table-responsive mt-3">
@@ -510,75 +510,75 @@
         ]
     });
 
-    var outstandingTable = $('#outstanding-table').DataTable({
-        dom: 'Bfrtip',
-        ajax: {
-            url: `${APP_URL}/api/warehouse/fetch_outstanding_cylinders`,
-            type: "GET"
+    // var outstandingTable = $('#outstanding-table').DataTable({
+    //     dom: 'Bfrtip',
+    //     ajax: {
+    //         url: `${APP_URL}/api/warehouse/fetch_outstanding_cylinders`,
+    //         type: "GET"
 
-        },
-        pageLength: 100,
-        ordering: false,
-        order: [],
-        processing: true,
-        columns: [{
-                data: "date"
-            },
-            {
-                data: "cylcode"
-            },
-            {
-                data: "size"
-            },
-            {
-                data: "name"
-            },
-            {
-                data: "phone"
-            },
-            {
-                data: "location"
-            },
-        ],
-        responsive: true,
-        buttons: [{
-                extend: 'copy',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
-                }
-            },
-            {
-                extend: 'excel',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
-                }
-            },
-            {
-                extend: 'pdf',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
-                }
-            },
-            {
-                text: "Refresh",
-                attr: {
-                    class: "ml-2 btn-warning btn btn-sm rounded"
-                },
-                action: function (e, dt, node, config) {
-                    dt.ajax.reload(false, null);
-                }
-            },
-        ]
-    });
+    //     },
+    //     pageLength: 100,
+    //     ordering: false,
+    //     order: [],
+    //     processing: true,
+    //     columns: [{
+    //             data: "date"
+    //         },
+    //         {
+    //             data: "cylcode"
+    //         },
+    //         {
+    //             data: "size"
+    //         },
+    //         {
+    //             data: "name"
+    //         },
+    //         {
+    //             data: "phone"
+    //         },
+    //         {
+    //             data: "location"
+    //         },
+    //     ],
+    //     responsive: true,
+    //     buttons: [{
+    //             extend: 'copy',
+    //             attr: {
+    //                 class: "btn btn-sm btn-secondary rounded-right"
+    //             },
+    //             exportOptions: {
+    //                 columns: [0, 1, 2, 3, 4, 5]
+    //             }
+    //         },
+    //         {
+    //             extend: 'excel',
+    //             attr: {
+    //                 class: "btn btn-sm btn-secondary rounded-right"
+    //             },
+    //             exportOptions: {
+    //                 columns: [0, 1, 2, 3, 4, 5]
+    //             }
+    //         },
+    //         {
+    //             extend: 'pdf',
+    //             attr: {
+    //                 class: "btn btn-sm btn-secondary rounded-right"
+    //             },
+    //             exportOptions: {
+    //                 columns: [0, 1, 2, 3, 4, 5]
+    //             }
+    //         },
+    //         {
+    //             text: "Refresh",
+    //             attr: {
+    //                 class: "ml-2 btn-warning btn btn-sm rounded"
+    //             },
+    //             action: function (e, dt, node, config) {
+    //                 dt.ajax.reload(false, null);
+    //             }
+    //         },
+    //     ]
+    // });
 
     var exchangeTable = $('#exchange-table').DataTable({
         dom: 'Bfrtip',

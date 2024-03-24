@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\OTPController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/verify-payment', [PaymentController::class, 'verifyPayment']);
 
 Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
 Route::get('dispatch', [RouteController::class, 'vendors'])->name('dispatch');

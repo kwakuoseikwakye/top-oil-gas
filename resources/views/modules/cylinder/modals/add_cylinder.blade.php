@@ -16,7 +16,7 @@
                     <div class="row mt-3">
                         <div class="col">
                             <label for="">Owner<span class="text-danger">*</span></label>
-                            <select name="owner" class="form-control select2" required>
+                            <select name="owner" class="form-control" required id="add-cylinder-owner">
                                 <option value="Petrocell">Petrocell</option>
                                 <option value="Customer">Customer</option>
                             </select>
@@ -68,8 +68,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-primary font-weight-bold" data-dismiss="modal">Close</button>
-                <button type="submit" form="add-cylinder-form" class="btn btn-primary font-weight-bold">Save</button>
+                <button type="button" class="btn btn-light-warning font-weight-bold" data-dismiss="modal">Close</button>
+                <button type="submit" form="add-cylinder-form" class="btn btn-warning font-weight-bold">Save</button>
             </div>
         </div>
     </div>

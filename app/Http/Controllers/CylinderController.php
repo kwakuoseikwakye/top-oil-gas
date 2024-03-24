@@ -13,13 +13,18 @@ use App\Models\Cylinder;
 use App\Models\Dispatch;
 use App\Models\Exchange;
 use App\Models\Log as ModelsLog;
+use App\Models\User;
 use Exception;
+use Faker\Provider\el_CY\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Stevebauman\Location\Facades\Location;
+use App\Arkesel\Arkesel as Sms;
+use App\Models\CustomerLocation;
+use App\Models\Payment as ModelsPayment;
 
 class CylinderController extends Controller
 {
@@ -39,9 +44,9 @@ class CylinderController extends Controller
             'tblcustomer.lname',
             'tblcustomer.phone',
             'tblcylinder.owner',
-            'tblcylinder.cylcode',
-            'tblcylinder.weight_id',
-            'tblcylinder.location_id',
+            // 'tblcylinder.cylcode',
+            // 'tblcylinder.weight_id',
+            // 'tblcylinder.location_id',
             'tblcylinder.requested',
         )
             ->join('tblcustomer', 'tblcustomer.custno', 'tblcustomer_cylinder.custno')
@@ -54,6 +59,171 @@ class CylinderController extends Controller
             // "data" => $data
             "data" => OrderResource::collection($data)
         ]);
+    }
+
+    public function addSingleOrder(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "location_id" => "required",
+                "customer" => "required",
+                "delivery_mode" => "required",
+                "cylcode" => "required",
+                "payment_type" => "required",
+            ], [
+                "customer.required" => "No customer selected",
+                "location_id.required" => "No location supplied",
+                "delivery_mode.required" => "No location supplied",
+                "cylcode.required" => "No cylinder selected",
+                "payment_type.required" => "No payment type selected",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Cylinder Assignment failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $cylinderExists = CustomerCylinder::where('cylcode', $request->cylcode)->first();
+            if ($cylinderExists) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Cylinder already assigned"
+                ], 422);
+            }
+
+            $customerCylinderExists = CustomerCylinder::where('custno', $request->customer)->exists();
+            if ($customerCylinderExists) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Customer already assigned to a cylinder, please use the refill button for cylinder refill"
+                ], 422);
+            }
+
+            $customerLocationExists = CustomerLocation::where('id', $request->location_id)->where('custno', $request->customer)->exists();
+            if (!$customerLocationExists) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "This location does not belong to the customer"
+                ], 422);
+            }
+
+            if ($request->delivery_mode === CustomerCylinder::PICKUP && empty($request->pickup_id)) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Pickup id is required"
+                ], 422);
+            }
+
+            if ($request->order_type === CustomerCylinder::ORDER_TYPE_PICKUP_LATER && empty($request->order_type)) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Pickup date is requied"
+                ], 422);
+            }
+
+            $cylinder = Cylinder::where('cylcode', $request->cylcode)->first();
+            $user = User::where('userid', $request->customer)->first();
+
+            DB::beginTransaction();
+            $orderid = strtoupper(bin2hex(random_bytes(6)));
+            CustomerCylinder::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "custno" => $user->userid,
+                "cylcode" => $request->cylcode,
+                "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
+                "location_id" => $request->location_id,
+                "weight_id" => $cylinder->weight_id,
+                "status" => CustomerCylinder::PENDING,
+                "deleted" =>  0,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            Dispatch::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "order_id" => $orderid,
+                "location_id" => $request->location_id,
+                "pickup_location" => $request->pickup_id ?? 0,
+                "deleted" =>  0,
+                "status" => Dispatch::PENDING,
+                "createdate" =>  date("Y-m-d H:i:s"),
+                "createuser" =>  $user->userid,
+            ]);
+
+            Cylinder::where('cylcode', $request->cylcode)->update(['requested' => 1]); // Mark the cylinder as requested by someone]);
+
+            $userIp = $request->ip();
+            $locationData = Location::get($userIp);
+            $transid1 = strtoupper(bin2hex(random_bytes(4)));
+
+            ModelsLog::insert([
+                "transid" => $transid1,
+                "username" => $user->userid,
+                "module" => "Cylinder",
+                "action" => "Assignment",
+                "activity" => "Order  {$orderid} assigned from Mobile with id successfully",
+                "ipaddress" => $userIp,
+                "createuser" =>  $user->userid,
+                "createdate" => gmdate("Y-m-d H:i:s"),
+                "longitude" => $locationData->longitude ?? $userIp,
+                "latitude" => $locationData->latitude ?? $userIp,
+            ]);
+
+            DB::commit();
+
+            if ($request->payment_type == "online") {
+                $payLink = PaymentController::generatePaymentLink($orderid);
+                if ($payLink['code'] === 200) {
+                    $msg = <<<MSG
+                    Dear customer,
+                    Your order for a cylinder with order ID {$orderid} is successful.
+                    Kindly click on the payment link below to complete your order. 
+                    {$payLink['checkout_url']}
+                    MSG;
+
+                    $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+                    $sms->send($user->phone, $msg);
+                } else {
+                    ModelsPayment::insert([
+                        "transid" => strtoupper(bin2hex(random_bytes(4))),
+                        "order_id" => $orderid,
+                        "custno" => $request->customer,
+                        "status" => ModelsPayment::PENDING,
+                        "payment_mode" => "cash",
+                    ]);
+                }
+            } else {
+                ModelsPayment::insert([
+                    "transid" => strtoupper(bin2hex(random_bytes(4))),
+                    "order_id" => $orderid,
+                    "custno" => $request->customer,
+                    "status" => ModelsPayment::PENDING,
+                    "payment_mode" => "cash",
+                ]);
+            }
+
+
+            return response()->json([
+                "ok" => true,
+                "msg" => "cylinder assigned successfully",
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
     }
 
     public function index()
@@ -271,10 +441,10 @@ class CylinderController extends Controller
             $validator = Validator::make($request->all(), [
                 "custno" => "required",
                 "cylcode" => "required",
-                "transid" => "required",
-                "weight_id" => "required",
-                "orderid" => "required",
-                "createuser" => "required",
+                // "transid" => "required",
+                // "weight_id" => "required",
+                // "orderid" => "required",
+                // "createuser" => "required",
             ]);
 
             if ($validator->fails()) {
