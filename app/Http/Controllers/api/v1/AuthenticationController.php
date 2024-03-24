@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Cache;
 
 class AuthenticationController extends Controller
 {
-    const ALLOWED_USER_TYPES = ["vendor", "warehouse", "admin", "customer"];
+    const ALLOWED_USER_TYPES = ["vendor", "warehouse", "customer"];
 
     // The number of seconds to wait for OTP to be verified
     const VERIFICATION_WAITING_TIME = 300;
@@ -34,44 +34,22 @@ class AuthenticationController extends Controller
                 "fname" => "required",
                 "lname" => "required",
                 "phone" => "required|numeric|unique:tblcustomer,phone",
-                // "email" => "required|email|unique:tbluser,email",
                 "password" => "required|min:8",
                 "id_type" => "required",
                 "id_no" => "required",
             ], [
-                // This has our own custom error messages for each validation
                 "fname.required" => "No first name supplied",
                 "lname.required" => "No last name supplied",
-
-                // Usertype errors
-                // "userType.required" => "No user type specified. We expect camel case 'userType' with a valid value",
-                // "userType.in" => "Invalid usertype: expected one of [" . join(",", self::ALLOWED_USER_TYPES) . "] but got [{$request->userType}]",
-
                 // Phone error messages
                 "phone.required" => "No phone number supplied",
                 "phone.numeric" => "Phone number supplied [{$request->phoneNumber}] must contain only numbers",
                 "phone.unique" => "Phone number already taken",
 
-                // Gender error messages
-                // "gender.required" => "Your gender was not specified",
-                // "gender.max" => "Invalid value for gender: expected one of ['m','f'] but got [{$request->gender}]",
-
-                // Email error messages
-                // "email.email" => "The supplied email [{$request->email}] is not a valid email",
-                // "email.required" => "No email supplied",
-                // "email.unique" => "Email already taken",
-
-                // Username error messages
-                //  "username.unique" => "Username already taken",
-
-                // ID error messages
                 "id_type.required" => "ID Type is required",
                 "id_no.required" => "ID number is required",
                 "id_link.required" => "Upload ID",
 
-                // Password error messages
                 "password.required" => "No password supplied",
-                // "password.confirm" => "Your passwords do not match",
                 "password.min" => "Your password must be a minimum of 8 characters long",
             ]);
 
@@ -95,6 +73,7 @@ class AuthenticationController extends Controller
                 "phone" => empty($request->phone) ? '' : $request->phone,
                 "email" => $request->email,
                 "picture" => $request->picture,
+                "backend_registered" => 0,
                 "deleted" =>  0,
                 "createdate" =>  date("Y-m-d H:i:s"),
                 "createuser" =>  $request->createuser,
@@ -109,10 +88,6 @@ class AuthenticationController extends Controller
                     "id_link" => env("APP_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
-
-            // $user = User::select('tblcustomer.*', 'tbluser.*')
-            //     ->join('tblcustomer', 'tblcustomer.custno', 'tbluser.userid')
-            //     ->where('tbluser.phone', $request->phone)->first();
 
             $userIp = $request->ip();
             $locationData = Location::get($userIp);
@@ -134,7 +109,7 @@ class AuthenticationController extends Controller
             DB::commit();
 
             $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, 600);
+            Cache::put('otp_' . $request->phone, $otp, $otp, now()->addMinutes(3));
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -174,27 +149,19 @@ class AuthenticationController extends Controller
                 "message" => "Sending otp failed. " . join(". ", $validator->errors()->all()),
             ], 422);
         }
-        // Retrieve OTP from cache or wherever it was stored
-        $cachedOtp = Cache::get('otp_' . $request->phone);
-        // return $cachedOtp;
+        $inputOtp = $request->input('otp');
+        $phone = $request->input('phone');
 
-        // if ($cachedOtp && $cachedOtp == $request->otp) {
-            // OTP is correct, proceed with user activation or any further steps
+        $cachedOtp = Cache::get('otp_' . $phone);
 
+        if ($cachedOtp && $cachedOtp == $inputOtp) {
             User::where('phone', $request->phone)->update(['verified' => 1]);
-            // Optionally, remove the OTP from cache after successful verification
             Cache::forget('otp_' . $request->phone);
 
-            return response()->json([
-                "status" => true,
-                "message" => "OTP verification successful.",
-            ], 200);
-        // } else {
-        //     return response()->json([
-        //         "status" => false,
-        //         "message" => "Invalid OTP provided.",
-        //     ], 401);
-        // }
+            return response()->json(['status' => true, 'message' => 'OTP verification successful.']);
+        } else {
+            return response()->json(['status' => false, 'message' => 'OTP is invalid or expired.']);
+        }
     }
 
     public function resendOtp(Request $request)
@@ -216,7 +183,7 @@ class AuthenticationController extends Controller
         if (!$otp) {
             // If there's no OTP, you might want to generate a new one or return an error
             $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, 60);
+            Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -225,7 +192,7 @@ class AuthenticationController extends Controller
             $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
             $sms->send($request->phone, $msg);
         } else {
-            Cache::put('otp_' . $request->phone, $otp, 240);
+            Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -268,7 +235,7 @@ class AuthenticationController extends Controller
         }
 
         $otp = rand(100000, 999999);
-        Cache::put('otp_' . $request->phone, $otp, 600);
+        Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
 
         $msg = <<<MSG
             Your OTP code is {$otp}
@@ -288,13 +255,9 @@ class AuthenticationController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                // "email" => "required|email|exists:tbluser,email",
                 "password" => "required",
                 "phone" => "required",
             ], [
-                // "email.required" => "Email not supplied",
-                // "email.email" => "Invalid email supplied: [{$request->email}]",
-                // "email.exists" => "Invalid credentials",
                 "phone.required" => "Phone number not supplied",
                 "password.required" => "Password not supplied",
             ]);
@@ -322,14 +285,6 @@ class AuthenticationController extends Controller
                     "message" => "You cannot log in using the mobile client",
                 ], 418);
             }
-
-            // Make sure account has been approved
-            // if ($user->others->approved == 1) {
-            //     return response()->json([
-            //         "status" => false,
-            //         "message" => "Your account has not been approved. Kindly contact admin",
-            //     ]);
-            // }
 
             $token = $user->createToken('accessToken')->plainTextToken;
             User::where("phone", $request->phone)->update([
@@ -428,22 +383,22 @@ class AuthenticationController extends Controller
             ], 422);
         }
 
-        $token = CustomerController::extractToken($request); 
+        $token = CustomerController::extractToken($request);
 
-            if (!empty($token)) {
-                $authenticatedUser = User::where('remember_token', $token)->first();
-                if (empty($authenticatedUser)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Unauthorized - Token not provided or invalid'
-                    ], 401);
-                }
-            } else {
+        if (!empty($token)) {
+            $authenticatedUser = User::where('remember_token', $token)->first();
+            if (empty($authenticatedUser)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Unauthorized - Token not provided or invalid'
                 ], 401);
             }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
 
         // $authenticatedUser = User::where("phone", $user->phone)
         //     ->first();
@@ -504,7 +459,7 @@ class AuthenticationController extends Controller
                     "request" => $request->all(),
                 ]
             );
-            return response()->json([ 
+            return response()->json([
                 "status" => false,
                 "message" => "An internal error occured. Reset failed",
             ], 500);
@@ -601,28 +556,5 @@ class AuthenticationController extends Controller
                 "message" => "An internal error occured. Reset failed",
             ], 500);
         }
-    }
-
-    public function logs()
-    {
-        $logs = DB::table("tbllogs")->orderByDesc("createdate")->get();
-
-        return response()->json([
-            "data" => $logs
-        ]);
-    }
-
-    public function logReport($userid, $dateFrom, $dateTo)
-    {
-        $logs = DB::table("tbllogs")
-            ->when($userid !== 'all', function ($q)  use ($userid) {
-                return $q->where('userid', $userid);
-            })
-            ->whereBetween('createdate', [$dateFrom, $dateTo])
-            ->orderByDesc("createdate")->get();
-
-        return response()->json([
-            "data" => $logs
-        ]);
     }
 }

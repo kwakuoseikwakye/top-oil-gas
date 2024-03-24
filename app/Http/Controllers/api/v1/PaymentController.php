@@ -13,6 +13,7 @@ use Illuminate\Http\Client\ResponseSequence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class PaymentController extends Controller
 {
@@ -66,7 +67,6 @@ class PaymentController extends Controller
                     // return $quantity;
                     $amountForPayment = (int)$quantity * (int)$cylinderSize->amount;
                     $weightAmt[] = $amountForPayment;
-                    
                 } else {
                     return response()->json([
                         "status" => false,
@@ -92,7 +92,7 @@ class PaymentController extends Controller
             $url = env("APP_URL");
 
             $customer = CustomerCylinder::where('order_id', $request->order_id)->first();
-            Payment::insert([//TODO: must remove when we go live
+            Payment::insert([ //TODO: must remove when we go live
                 "transid" => strtoupper(bin2hex(random_bytes(4))),
                 "transaction_id" => $transactionId,
                 "amount_paid" => $amt,
@@ -210,5 +210,30 @@ class PaymentController extends Controller
                 "errLine" => $e->getLine(),
             ]);
         }
+    }
+
+    public function fetchCustomerPayments(Request $request)
+    {
+        $token = CustomerController::extractToken($request);
+
+        if (!empty($token)) {
+            $user = User::where('remember_token', $token)->first();
+            if (empty($user)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
+        return response()->json([
+            "status" => true,
+            "message" => "Request successful",
+            "data" => Payment::with(['order', 'order.cylinderWeights'])->where('custno', $user->userid)->get()
+        ]);
     }
 }

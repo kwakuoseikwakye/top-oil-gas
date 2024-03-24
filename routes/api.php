@@ -76,7 +76,10 @@ Route::prefix("v1")->group(function () {
     Route::prefix("payments")->group(function () {
         Route::post("initiate", [V1PaymentController::class, "initiatePayment"]);
         Route::get("verify_payment/{transID}", [V1PaymentController::class, "verifyPayment"]);
+        Route::get("get_customer_payments", [V1PaymentController::class, "fetchCustomerPayments"]);
     });
+
+
     // Customers 
     Route::prefix("customers")->group(function () { 
         Route::get("get_dispatch/{orderid}", [MobileCustomerController::class, "getDispatch"]);

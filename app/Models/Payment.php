@@ -21,14 +21,19 @@ class Payment extends Model
     const PENDING = 'pending';
 
     protected $fillable = [
-        "transid", "order_id", "payment_mode", "transaction_id", 
-         "status", "amount_due", "amount_paid", "balance",
-         "deleted", "createdate",
+        "transid", "order_id", "payment_mode", "transaction_id",
+        "status", "amount_due", "amount_paid", "balance",
+        "deleted", "createdate",
         "createuser", "modifydate", "modifyuser",
     ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class, "custno", "custno");
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(CustomerCylinder::class, "order_id", "order_id");
     }
 }

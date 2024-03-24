@@ -56,4 +56,9 @@ class CustomerCylinder extends Model
     {
         return $this->belongsTo(CylinderSize::class, "weight_id", "id");
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
 }

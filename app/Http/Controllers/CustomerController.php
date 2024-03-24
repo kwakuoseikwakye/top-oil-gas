@@ -115,6 +115,7 @@ class CustomerController extends Controller
                 "email" => empty($request->email) ? '' : $request->email,
                 "picture" => $request->picture,
                 "deleted" =>  0,
+                "backend_registered" => 1,
                 "createdate" =>  date("Y-m-d H:i:s"),
                 "createuser" =>  $request->createuser,
             ]);
@@ -154,7 +155,7 @@ class CustomerController extends Controller
                 $filePath = $request->file("idimage")->store("public/ids");
 
                 DB::table('tblcustomer')->where("phone", $request->phoneNumber)->update([
-                    "id_link" => env("IMAGE_BASE_URL") . "/" . str_replace("public", "storage", $filePath),
+                    "id_link" => env("APP_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
 
@@ -177,7 +178,7 @@ class CustomerController extends Controller
                 $filePath = $request->file("image")->store("public/avatars");
 
                 DB::table('tblcustomer')->where("transid", $transid)->update([
-                    "picture" => env("IMAGE_BASE_URL") . "/" . str_replace("public", "storage", $filePath),
+                    "picture" => env("APP_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
 
