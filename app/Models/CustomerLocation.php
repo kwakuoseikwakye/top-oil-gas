@@ -22,4 +22,9 @@ class CustomerLocation extends Model
     {
         return $this->hasMany(Cylinder::class, 'location_id');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'location_id','id');
+    }
 }

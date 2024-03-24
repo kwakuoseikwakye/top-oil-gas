@@ -83,7 +83,7 @@ class CustomerController extends Controller
     public function getAllOrders(Request $request, $orderid)
     {
         $token = $this->extractToken($request);
- 
+
         if (!empty($token)) {
             $user = User::where('remember_token', $token)->first();
             if (empty($user)) {
@@ -98,11 +98,11 @@ class CustomerController extends Controller
                 'message' => 'Unauthorized - Token not provided or invalid'
             ], 401);
         }
-        return response()->json([   
+        return response()->json([
             "status" => true,
             "message" => "Request successful",
             "data" => CustomerCylinder::with(['cylinder', 'customerWeights'])->where('tblcustomer_cylinder.custno', $user->userid)
-            ->where('tblcustomer_cylinder.order_id', $orderid)->get()
+                ->where('tblcustomer_cylinder.order_id', $orderid)->get()
         ]);
     }
 
@@ -210,7 +210,7 @@ class CustomerController extends Controller
             return response()->json([
                 "status" => true,
                 "message" => "Request successful",
-                "data" => $customerDispatch
+                "data" => Dispatch::with('pickup', 'customerLocation')->where('order_id', $orderid)->get()
             ]);
         } catch (\Exception $e) {
             return response()->json([

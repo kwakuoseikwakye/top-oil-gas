@@ -106,17 +106,18 @@ class AuthenticationController extends Controller
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
 
+            $this->sendOtp($request);
             DB::commit();
 
-            $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, $otp, now()->addMinutes(3));
+            // $otp = rand(100000, 999999);
+            // Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
 
-            $msg = <<<MSG
-            Your registration OTP code is {$otp}
-            MSG;
+            // $msg = <<<MSG
+            // Your registration OTP code is {$otp}
+            // MSG;
 
-            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
-            $sms->send($request->phone, $msg);
+            // $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            // $sms->send($request->phone, $msg);
             return response()->json([
                 "status" => true,
                 "message" => "Registration successful",
@@ -154,6 +155,8 @@ class AuthenticationController extends Controller
 
         $cachedOtp = Cache::get('otp_' . $phone);
 
+        // return $cachedOtp;
+
         if ($cachedOtp && $cachedOtp == $inputOtp) {
             User::where('phone', $request->phone)->update(['verified' => 1]);
             Cache::forget('otp_' . $request->phone);
@@ -183,7 +186,7 @@ class AuthenticationController extends Controller
         if (!$otp) {
             // If there's no OTP, you might want to generate a new one or return an error
             $otp = rand(100000, 999999);
-            Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
+            Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(6));
 
             $msg = <<<MSG
             Your registration OTP code is {$otp}
@@ -235,7 +238,7 @@ class AuthenticationController extends Controller
         }
 
         $otp = rand(100000, 999999);
-        Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(3));
+        Cache::put('otp_' . $request->phone, $otp, now()->addMinutes(6));
 
         $msg = <<<MSG
             Your OTP code is {$otp}

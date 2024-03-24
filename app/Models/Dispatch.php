@@ -30,4 +30,19 @@ class Dispatch extends Model
     {
         return $this->belongsTo(Cylinder::class, "cylcode", "cylcode");
     }
+
+    public function order()
+    {
+        return $this->belongsTo(CustomerCylinder::class, "order_id", "order_id");
+    }
+
+    public function pickup()
+    {
+        return $this->belongsTo(Pickup::class, "pickup_location", "id");
+    }
+
+    public function customerLocation()
+    {
+        return $this->belongsTo(CustomerLocation::class, "location_id", "id");
+    }
 }
