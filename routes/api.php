@@ -78,11 +78,12 @@ Route::prefix("v1")->group(function () {
         Route::get("verify_payment/{transID}", [V1PaymentController::class, "verifyPayment"]);
     });
     // Customers 
-    Route::prefix("customers")->group(function () {
+    Route::prefix("customers")->group(function () { 
         Route::get("get_dispatch/{orderid}", [MobileCustomerController::class, "getDispatch"]);
         Route::get("cylinders", [MobileCustomerController::class, "getCustomerCylinders"]);
         Route::get("get_pickup", [MobileCustomerController::class, "getPickupStations"]);
-        Route::get("get_orders", [MobileCustomerController::class, "getOrders"]);
+        Route::get("get_my_orders", [MobileCustomerController::class, "getMyOrders"]);
+        Route::get("get_orders/{orderid}", [MobileCustomerController::class, "getAllOrders"]);
         Route::post("add_orders", [MobileCustomerController::class, "addOrders"]);
         Route::post("bulk_order", [MobileCustomerController::class, "bulkOrder"]);
         Route::post("purchase_now", [MobileCustomerController::class, "purchaseNow"]);
@@ -195,6 +196,7 @@ Route::resource("employees", EmployeeController::class);
 //Cylinders
 Route::prefix("cylinder")->group(function () {
     Route::get("get_orders", [CylinderController::class, "getOrders"]);
+    Route::post("add_single_order", [CylinderController::class, "addSingleOrder"]);
     Route::post("update_assign", [CylinderController::class, "updateAssignCylinder"]);
     Route::post("assign", [CylinderController::class, "assignCylinder"]);
     Route::get("customer", [CylinderController::class, "cylinderCustomer"]);
@@ -225,6 +227,7 @@ Route::resource("users", AdminUsersController::class);
 
 // Customers 
 Route::prefix("customer")->group(function () {
+    Route::post("add_location", [CustomerController::class, "addLocation"]);
     Route::post("update", [CustomerController::class, "update"]);
     Route::get("trash", [CustomerController::class, "trash"]);
     Route::get("{dateFrom}/{dateTo}", [CustomerController::class, "report"]);

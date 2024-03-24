@@ -51,4 +51,9 @@ class CustomerCylinder extends Model
     {
         return $this->belongsTo(User::class, "custno", "userid");
     }
+
+    public function cylinderWeights() 
+    {
+        return $this->belongsTo(CylinderSize::class, "weight_id", "id");
+    }
 }

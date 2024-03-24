@@ -18,11 +18,11 @@
 
                         <!--begin::Button-->
                         <a data-toggle="modal" data-target="#add-customer-modal"
-                            class="btn btn-primary font-weight-bolder">
+                            class="btn btn-light-warning font-weight-bolder">
                             Add Customer</a>
-                        <a data-toggle="modal" data-target="#file-modal"
+                        {{-- <a data-toggle="modal" data-target="#file-modal"
                             class="btn btn-primary font-weight-bolder ml-1">
-                            Upload Excel</a>
+                            Upload Excel</a> --}}
                         <!--end::Button-->
                     </div>
                 </div>
@@ -38,7 +38,6 @@
                     </ul>
 
                     <div class="tab-content mt-5" id="myTabContent">
-
                         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                             <div class="table-responsive mt-3">
                                 <table width="100%"
@@ -48,8 +47,6 @@
                                         <tr>
                                             <th>Code</th>
                                             <th>Name</th>
-                                            <th>Gender</th>
-                                            <th>Email</th>
                                             <th>Phone</th>
                                             <th>Actions</th>
                                         </tr>
@@ -72,6 +69,7 @@
 @include('modules.customer.modals.edit_customer')
 @include('modules.customer.modals.info')
 @include('modules.customer.modals.file_upload')
+@include('modules.customer.modals.add_location')
 <script>
     var customerTable = $('#customer-table').DataTable({
         dom: 'Bfrtip',
@@ -83,43 +81,46 @@
         ordering: false,
         order: [],
         processing: true,
-        pageLength : 100,
+        // pageLength : 100,
         columns: [{
                 data: "code"
             },
             {
                 data: "name"
             },
-            {
-                data: "gender"
-            },
-            {
-                data: "email"
-            },
+            // {
+            //     data: "gender"
+            // },
+            // {
+            //     data: "email"
+            // },
             {
                 data: "phone"
             },
             {
-                data: null,
-                defaultContent: `
-
-                <button type='button' data-row-transid='$this->transid'
-                rel='tooltip' class='btn btn-primary btn-sm view-btn'>
-                    <i class='fas fa-eye'></i>
-                </button>
-
-                <button type='button' data-row-transid='$this->transid'
-                rel='tooltip' class='btn btn-success btn-sm edit-btn'>
-                   <i class='fas fa-edit'></i>
-                </button>
-
-                <button type='button' data-row-transid='$this->transid'
-                rel='tooltip' class='btn btn-danger btn-sm delete-btn'>
-                   <i class='fas fa-trash'></i>
-                </button>
-                
-                `
+                data: "action"
             },
+            // {
+            //     data: null,
+            //     defaultContent: `
+
+            //     <button type='button' data-row-transid='$this->transid'
+            //     rel='tooltip' class='btn btn-primary btn-sm view-btn'>
+            //         <i class='fas fa-eye'></i>
+            //     </button>
+
+            //     <button type='button' data-row-transid='$this->transid'
+            //     rel='tooltip' class='btn btn-success btn-sm edit-btn'>
+            //        <i class='fas fa-edit'></i>
+            //     </button>
+
+            //     <button type='button' data-row-transid='$this->transid'
+            //     rel='tooltip' class='btn btn-danger btn-sm delete-btn'>
+            //        <i class='fas fa-trash'></i>
+            //     </button>
+                
+            //     `
+            // },
         ],
         // "columnDefs": [{
         //         "targets": [6],
@@ -175,30 +176,20 @@
         ]
     });
 
+    $("#customer-table").on("click", ".location-btn", function () {
+        let data = customerTable.row($(this).parents('tr')).data();
+        $("#add-customer-location-number").val(data.code);
+        $("#add-customer-location-modal").modal("show");
+    });
+
     $("#customer-table").on("click", ".edit-btn", function () {
         let data = customerTable.row($(this).parents('tr')).data();
 
         $("#edit-customer-modal").modal("show");
         $("#edit-customer-number").val(data.code);
         $("#edit-customer-fname").val(data.fname);
-        $("#edit-customer-mname").val(data.mname);
         $("#edit-customer-lname").val(data.lname);
-        $("#edit-customer-town").val(data.town);
-        $("#edit-customer-gender").val(data.gender_lower).trigger('change');
-        $("#edit-customer-email").val(data.email);
         $("#edit-customer-phone").val(data.phone);
-        $("#edit-customer-title").val(data.title).trigger('change');
-        $("#edit-customer-dob").val(data.dob);
-        $("#edit-customer-pob").val(data.pob);
-        $("#edit-customer-marital").val(data.marital_status);
-        $("#edit-customer-gps").val(data.gps);
-        $("#edit-customer-streetname").val(data.streetname);
-        $("#edit-customer-landmark").val(data.landmark);
-        $("#edit-customer-region").val(data.region).trigger('change');
-        $("#edit-customer-address").val(data.address);
-        $("#edit-customer-occupation").val(data.occupation);
-        $("#edit-customer-long").val(data.long);
-        $("#edit-customer-lat").val(data.lat);
         $("#edit-customer-idtype").val(data.idtype).trigger('change');
         $("#edit-customer-idno").val(data.idno);
     });
@@ -233,7 +224,7 @@
     $("#customer-table").on("click", ".delete-btn", function () {
         var data = customerTable.row($(this).parents("tr")).data();
         var formdata = new FormData()
-        formdata.append("transid", data.transid);
+        formdata.append("transid", data.code);
         formdata.append("createuser", "admin");
 
         data.transid

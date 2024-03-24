@@ -23,15 +23,18 @@ class OrderResource extends JsonResource
             $status = "<span class='badge badge-danger'>{$this->status}</span>";
         }
 
-        if ($this->status == CustomerCylinder::PENDING) {
-            $disabled = 'disabled';
-        }else {
-            $disabled = '';
-        }
+        // if ($this->status == CustomerCylinder::PENDING) {
+        //     $disabled = 'disabled';
+        // }else {
+        //     $disabled = '';
+        // }
+
         if (empty($this->cylcode)) {
             $new = "<span class='font-weight-bold text-success'>New Request</span>";
+            $disabled = null;
         } else {
             $new = "<span class='font-weight-bold text-warning'>Cylinder Refil</span>";
+            $disabled = 'disabled';
         }
         return [
             "transid" => $this->transid,
@@ -42,7 +45,7 @@ class OrderResource extends JsonResource
             "weight_id" => $this->weight_id,
             "new" => $new,
             "date" => date('jS F Y H:i:s A', strtotime($this->date_acquired)),
-            "weight" => "GHS {$this->amount} - {$this->weight}",
+            "weight" => "GHS {$this->amount} ({$this->weight})",
             "location" => "<b>Name</b> : {$this->name}\n
             <b>Address</b> : {$this->address}\n
             <b>Phone</b> : {$this->phone1} - {$this->phone2}\n
@@ -70,7 +73,7 @@ class OrderResource extends JsonResource
                   </button>
                   <button
                   class='dropdown-item btn btn-sm view-btn mt-2 refil-cylinder-btn' 
-                  data-toggle='modal' {$disabled}
+                  data-toggle='modal'
                   title=''>
                       Refill Cylinder
               </button>

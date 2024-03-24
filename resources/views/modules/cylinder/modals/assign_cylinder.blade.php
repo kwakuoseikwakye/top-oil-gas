@@ -10,26 +10,29 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="assign-cylinder-form" enctype="multipart/form-data">
+                <form id="assign-cylinder-form">
                     @csrf
 
                     <input type="text" name="transid" id="assign-cylinder-transid" required hidden>
                     <input type="text" name="custno" id="assign-cylinder-custno" required hidden>
                     <input type="text" name="order_id" id="assign-cylinder-orderid" required hidden>
-                    <input type="text" name="weight_id" id="assign-cylinder-weight" required hidden>
-                    <label for="">Cylinder<span class="text-danger">*</span></label>
-                    <div class="col mt-3">
-                        <select name="cylcode" class="form-control select2" id="assign-customer-cylinder" required>
+                    {{-- <input type="text" name="weight_id" id="assign-cylinder-weight" required hidden> --}}
+                    <div class="row">
+                        <div class="col">
+                            <label for="">Cylinder</label>
+                            <select name="cylcode" class="form-control selectpicker" data-live-search="true" id="assign-customer-cylinder" required>
+                                <option value="">--Select--</option>
 
-                        </select>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-primary font-weight-bold"
+                <button type="button" class="btn btn-light-warning font-weight-bold"
                     data-dismiss="modal">Close</button>
                 <button type="submit" form="assign-cylinder-form"
-                    class="btn btn-primary font-weight-bold">Save</button>
+                    class="btn btn-warning font-weight-bold">Save</button>
             </div>
         </div>
     </div>

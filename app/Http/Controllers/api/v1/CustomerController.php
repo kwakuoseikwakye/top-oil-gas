@@ -55,7 +55,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function getOrders(Request $request)
+    public function getMyOrders(Request $request)
     {
         $token = $this->extractToken($request);
 
@@ -76,7 +76,33 @@ class CustomerController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => CustomerCylinder::with(['cylinder', 'cylinder.cylinderWeight'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
+            "data" => CustomerCylinder::with(['cylinder', 'cylinderWeights'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
+        ]);
+    }
+
+    public function getAllOrders(Request $request, $orderid)
+    {
+        $token = $this->extractToken($request);
+ 
+        if (!empty($token)) {
+            $user = User::where('remember_token', $token)->first();
+            if (empty($user)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
+        return response()->json([   
+            "status" => true,
+            "message" => "Request successful",
+            "data" => CustomerCylinder::with(['cylinder', 'customerWeights'])->where('tblcustomer_cylinder.custno', $user->userid)
+            ->where('tblcustomer_cylinder.order_id', $orderid)->get()
         ]);
     }
 
