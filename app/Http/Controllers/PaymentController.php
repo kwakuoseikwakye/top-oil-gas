@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\api\v1\CustomerController;
 use App\Http\Resources\PaymentResource;
 use App\Models\CustomerCylinder;
 use App\Models\CylinderSize;
@@ -137,7 +138,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function verifyPayment(Request $request)
+    public function verifyPayments(Request $request)
     {
         try {
             $transactionId = $request->query('transaction_id');
@@ -148,10 +149,10 @@ class PaymentController extends Controller
             $payment  = Payment::where('transaction_id', $transactionId)->first();
             Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
             if (!$payment) {
-                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
                 return response()->json(['ok' => false, 'msg' => 'Invalid transaction id'], 200);
             }
-            CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::SUCCESS]);
+            CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
             Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
 
             DB::commit();
@@ -159,6 +160,54 @@ class PaymentController extends Controller
                 "ok" => true,
                 "msg" => "Payment successful",
             ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "errLine" => $e->getLine(),
+            ]);
+        }
+    }
+
+    public function verifyPayment(Request $request, $transactionId)
+    {
+        try {
+            $transactionId = $request->query('transaction_id');
+            $statusCode = $request->query('code');
+            if (empty($transactionId)) {
+                return redirect(route("/cancel-payment"));
+            }
+
+
+            DB::beginTransaction();
+            $payment  = Payment::where('transaction_id', $transactionId)->first();
+
+            if (empty($payment)) { 
+                return response()->json(['status' => false, 'message' => 'Transaction not found'], 404);
+            }
+
+            if ($statusCode == "000") {
+                Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
+                if (empty($payment)) {
+                    // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                    Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
+                    return response()->json(['status' => false, 'message' => 'Payment failed'], 402);
+                }
+                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::SUCCESS]);
+                Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+            } else {
+                // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
+                return response()->json(['status' => false, 'message' => 'Payment failed'], 402);
+            }
+
+
+            DB::commit();
+
+            return redirect(route("/success-payment"));
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

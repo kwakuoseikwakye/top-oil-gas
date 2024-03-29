@@ -76,7 +76,7 @@ class CustomerController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => CustomerCylinder::with(['cylinder', 'cylinderWeights'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
+            "data" => CustomerCylinder::with(['cylinder', 'cylinder.cylinderWeight'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
         ]);
     }
 

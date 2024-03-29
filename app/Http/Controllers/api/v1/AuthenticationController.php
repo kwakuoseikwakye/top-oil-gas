@@ -363,18 +363,15 @@ class AuthenticationController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                "password" => "required|min:8",
-                "current_password" => "required",
-                // "phone" => "required|numeric|exists:tbluser,phone",
+                "old_password" => "required|min:8",
+                "current_password" => "required|min:8",
             ],
             [
-                "password.required" => "You have to supply your new password",
-                "password.min" => "Your new password must be at least 8 characters long",
+                "old_password.required" => "Old password is required",
+                "old_password.min" => "Your old password must be at least 8 characters long",
 
-                "current_password.required" => "You have to supply your current password",
-                // "phone.required" => "No phone number supplied",
-                // "phone.exists" => "Unknown phone number supplied",
-                // "phone.numeric" => "The phone number you supplied is invalid",
+                "current_password.min" => "Your new password must be at least 8 characters long",
+                "current_password.required" => "Current password is required",
             ]
         );
 
@@ -424,12 +421,13 @@ class AuthenticationController extends Controller
         }
 
         //create new password
-        $password = Hash::make($request->password);
+        $password = Hash::make($request->old_password);
 
 
         //update new password with the authenticated user
         try {
             $authenticatedUser->update([
+                "backend_registered" => 0,
                 'password' => $password,
                 'modifydate' => date("Y-m-d H:i:s"),
             ]);

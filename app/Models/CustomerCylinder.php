@@ -13,11 +13,9 @@ class CustomerCylinder extends Model
 
     const DELIVERY = 'delivery';
     const PICKUP = 'pickup';
-    const PENDING = 'pending assignment';
-    const SUCCESS = 'success';
-    const CANCELLED = 'cancelled';
-    const EN_ROUTE = 'en route';
-    const DELIVERED = 'delivered';
+    const PENDING_ASSIGNMENT = 'pending assignment';
+    const PENDING_PAYMENT = 'pending payment';
+    const SUCCESS = 'order completed';
     const ORDER_TYPE_PICKUP_NOW = 'pickup_now';
     const ORDER_TYPE_PICKUP_LATER = 'pickup_later';
 

@@ -86,7 +86,11 @@ class PaymentController extends Controller
                 default => '',
             };
 
-            $transactionId = random_int(100000000000, 999999999999);
+            $transactionId = '';
+            for ($i = 0; $i < 12; $i++) {
+                $transactionId .= random_int(0, 9);
+            }
+            // $transactionId = random_int(100000000000, 999999999999);
             $username = env("API_USER");
             $key = env("API_KEY");
             $url = env("APP_URL");
@@ -166,7 +170,20 @@ class PaymentController extends Controller
 
     public function verifyPayment(Request $request, $transactionId)
     {
+        // return $request->all();
         try {
+            $validator = Validator::make($request->all(), [
+                "payment_status_code" => "required",
+            ], [
+                "payment_status_code.required" => "Status code is required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Initiating payment failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
             $token = CustomerController::extractToken($request);
 
             if (!empty($token)) {
@@ -185,15 +202,27 @@ class PaymentController extends Controller
             }
 
             DB::beginTransaction();
-            $payment  = Payment::find($transactionId);
-            $payment->update(['status' => Payment::SUCCESS]);
-            if (!$payment) {
-                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
-                // Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
-                return response()->json(['status' => false, 'message' => 'Invalid transaction id'], 200);
+            $payment  = Payment::where('transaction_id', $transactionId)->first();
+
+            if (empty($payment)) { 
+                return response()->json(['status' => false, 'message' => 'Transaction not found'], 404);
+            } 
+
+            if ($request->payment_status_code == "000") {
+                if (empty($payment)) {
+                    // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                    Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
+                    return response()->json(['status' => false, 'message' => 'Payment failed'], 402);
+                }
+                Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
+                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
+                Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+            } else {
+                // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
+                Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
+                return response()->json(['status' => false, 'message' => 'Payment failed'], 402);
             }
-            CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::SUCCESS]);
-            Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+
 
             DB::commit();
 

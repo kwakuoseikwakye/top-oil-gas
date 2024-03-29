@@ -30,7 +30,7 @@ class DispatchResource extends JsonResource
         } else if ($this->status == Dispatch::EN_ROUTE) {
             $status = "<span class='badge badge-success'>{$this->status}</span>";
         } else {
-            $status = "<span class='badge badge-danger'>{$this->status}</span>";
+            $status = "<span class='badge badge-info'>{$this->status}</span>";
         }
 
         if (empty($this->pickup_location)) {

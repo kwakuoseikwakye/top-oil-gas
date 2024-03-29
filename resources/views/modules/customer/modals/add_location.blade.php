@@ -39,9 +39,22 @@
                     </div>
                     <div class="row mt-3">
                         <div class="col">
+                            <label for="">Latitude </label>
+                            <input type="text" min="text" name="lat" placeholder=""
+                                class="form-control form-control-sm" id="add-customer-lat">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label for="">Longitude </label>
+                            <input type="text" name="long" placeholder="" class="form-control form-control-sm"
+                                id="add-customer-long">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
                             <label for="">Additional Info</label>
-                            <textarea type="text" name="additional_info" id="add-customer-loc-info"
-                                class="form-control"></textarea>
+                            <textarea type="text" name="additional_info" id="add-customer-loc-info" class="form-control"></textarea>
                         </div>
                     </div>
                 </form>

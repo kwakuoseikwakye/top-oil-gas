@@ -251,6 +251,8 @@ class CustomerController extends Controller
                 "name" => strtoupper($request->name),
                 "additional_info" => $request->additional_info,
                 "address" => $request->address,
+                "long" => $request->long,
+                "lat" => $request->lat,
                 "phone1" => $request->phoneNumber
             ]);
 

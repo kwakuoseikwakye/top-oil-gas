@@ -15,26 +15,29 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
-        if ($this->status == CustomerCylinder::PENDING) {
+        if ($this->status == CustomerCylinder::PENDING_PAYMENT) {
+            $payLinkDisabled = null;
+            $status = "<span class='badge badge-info'>{$this->status}</span>";
+        } else if ($this->status == CustomerCylinder::PENDING_ASSIGNMENT) {
+            $payLinkDisabled = 'disabled';
             $status = "<span class='badge badge-warning'>{$this->status}</span>";
         } else if ($this->status == CustomerCylinder::SUCCESS) {
+            $payLinkDisabled = 'disabled';
             $status = "<span class='badge badge-success'>{$this->status}</span>";
         } else {
-            $status = "<span class='badge badge-danger'>{$this->status}</span>";
+            $payLinkDisabled = 'disabled';
+            $status = "<span class='badge badge-danger'>Invalid Order</span>";
         }
-
-        // if ($this->status == CustomerCylinder::PENDING) {
-        //     $disabled = 'disabled';
-        // }else {
-        //     $disabled = '';
-        // }
 
         if (empty($this->cylcode)) {
             $new = "<span class='font-weight-bold text-success'>New Request</span>";
             $disabled = null;
+            $refillDisabled = 'disabled';
         } else {
             $new = "<span class='font-weight-bold text-warning'>Cylinder Refil</span>";
             $disabled = 'disabled';
+            $refillDisabled = null;
+
         }
         return [
             "transid" => $this->transid,
@@ -71,12 +74,24 @@ class OrderResource extends JsonResource
                       title=''>
                           Assign Cylinder
                   </button>
-                  <button
-                  class='dropdown-item btn btn-sm view-btn mt-2 refil-cylinder-btn' 
-                  data-toggle='modal'
-                  title=''>
-                      Refill Cylinder
-              </button>
+                <button
+                class='dropdown-item btn btn-sm view-btn mt-2 refil-cylinder-btn' 
+                data-toggle='modal' {$refillDisabled}
+                title=''>
+                    Refill Cylinder
+                </button>
+                <button
+                class='dropdown-item btn btn-sm view-btn mt-2 send-payment-btn' 
+                data-toggle='modal' {$payLinkDisabled}
+                title=''>
+                    Send Payment Link
+                </button>
+                <button
+                class='dropdown-item btn btn-sm view-btn mt-2 collect-payment-btn' 
+                data-toggle='modal' {$payLinkDisabled}
+                title=''>
+                    Collect Cash Payment
+                </button>
             
                   </div>
               </div>

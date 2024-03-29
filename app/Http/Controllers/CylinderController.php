@@ -68,13 +68,13 @@ class CylinderController extends Controller
                 "location_id" => "required",
                 "customer" => "required",
                 "delivery_mode" => "required",
-                "cylcode" => "required",
+                // "cylcode" => "required",
                 "payment_type" => "required",
             ], [
                 "customer.required" => "No customer selected",
                 "location_id.required" => "No location supplied",
                 "delivery_mode.required" => "No location supplied",
-                "cylcode.required" => "No cylinder selected",
+                // "cylcode.required" => "No cylinder selected",
                 "payment_type.required" => "No payment type selected",
             ]);
 
@@ -132,11 +132,11 @@ class CylinderController extends Controller
                 "transid" => strtoupper(bin2hex(random_bytes(4))),
                 "order_id" => $orderid,
                 "custno" => $user->userid,
-                "cylcode" => $request->cylcode,
+                // "cylcode" => $request->cylcode,
                 "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
                 "location_id" => $request->location_id,
                 "weight_id" => $cylinder->weight_id,
-                "status" => CustomerCylinder::PENDING,
+                "status" => CustomerCylinder::PENDING_PAYMENT,
                 "deleted" =>  0,
                 "createdate" =>  date("Y-m-d H:i:s"),
                 "createuser" =>  $user->userid,
@@ -242,45 +242,6 @@ class CylinderController extends Controller
         return response()->json([
             'data' => CylinderResource::collection(Cylinder::where("deleted", 1)
                 ->orderBy("createdate", "DESC")->get()),
-        ]);
-    }
-
-    public function cylinderReport($dateFrom, $dateTo)
-    {
-        return response()->json([
-            'data' => CylinderResource::collection(Cylinder::where("deleted", 0)
-                ->whereBetween('createdate', [$dateFrom, $dateTo])
-                ->orderBy("createdate", "DESC")->get()),
-        ]);
-    }
-
-    public function cylinderCustomer()
-    {
-        return response()->json([
-            'data' => CustomerCylinderResource::collection(CustomerCylinder::where("deleted", 0)->with('cylinder', 'user')
-                ->orderBy("createdate", "DESC")->get())
-        ]);
-    }
-
-    public function customerCylinderReport($customer, $dateFrom, $dateTo)
-    {
-        return response()->json([
-            'data' => CustomerCylinderResource::collection(CustomerCylinder::when($customer !== 'all', function ($q)  use ($customer) {
-                return $q->where('custno', $customer);
-            })->where("deleted", 0)->with('cylinder', 'user')
-                ->whereBetween('createdate', [$dateFrom, $dateTo])
-                ->orderBy("createdate", "DESC")->get())
-        ]);
-    }
-
-    public function cylinderCustomerReport($cylinder, $dateFrom, $dateTo)
-    {
-        return response()->json([
-            'data' => CustomerCylinderResource::collection(CustomerCylinder::when($cylinder !== 'all', function ($q)  use ($cylinder) {
-                return $q->where('cylcode', $cylinder);
-            })->where("deleted", 0)->with('cylinder', 'user')
-                ->whereBetween('createdate', [$dateFrom, $dateTo])
-                ->orderBy("createdate", "DESC")->get())
         ]);
     }
 
@@ -460,7 +421,7 @@ class CylinderController extends Controller
             $customerOrder = CustomerCylinder::where("transid", $request->transid)->first();
             CustomerCylinder::where("transid", $request->transid)->update([
                 "cylcode" => $request->cylcode,
-                // "weight_id" => $request->weight_id,
+                "status" => CustomerCylinder::SUCCESS,
                 "modifydate" =>  date("Y-m-d H:i:s"),
                 "modifyuser" =>  $request->createuser,
             ]);

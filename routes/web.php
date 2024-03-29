@@ -21,6 +21,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/verify-payment', [PaymentController::class, 'verifyPayment']);
+Route::get('/cancel-payment', function () {
+    return view("cancel_payment");
+});
+Route::get('/success-payment', function () {
+    return view("success_payment");
+});
 
 Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
 Route::get('dispatch', [RouteController::class, 'vendors'])->name('dispatch');

@@ -44,7 +44,7 @@
                                 @endforeach --}}
                             </select>
                         </div>
-                        <div class="col">
+                        {{-- <div class="col">
                             <label for="">Cylinder *</label>
                             <select type="text" name="cylcode" data-live-search="true" class="form-control  selectpicker"
                                 required>
@@ -53,7 +53,7 @@
                                         {{ $item->amount }})</option>
                                 @endforeach
                             </select>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <div class="row mt-3">

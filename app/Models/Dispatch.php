@@ -11,6 +11,7 @@ class Dispatch extends Model
     const CREATED_AT = "createdate";
     const UPDATED_AT = "modifydate";
 
+    const CANCELLED = 'cancelled';
     const PENDING = 'pending';
     const EN_ROUTE = 'en route';
     const DELIVERED = 'delivered';
