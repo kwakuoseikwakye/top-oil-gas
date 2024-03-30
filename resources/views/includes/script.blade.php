@@ -89,14 +89,22 @@
     // Initialize Bootstrap Select
     $('.selectpicker').selectpicker();
     const enableNotificationsBtn = document.getElementById("enable-notifications-btn");
-    if (Notification.permission === "granted") {
-        enableNotificationsBtn.style.display = "none";
-    } else {
-        enableNotificationsBtn.style.display = "block";
-        enableNotificationsBtn.addEventListener("click", function() {
-            Notification.requestPermission();
-        });
+
+    function checkNotificationPermission() {
+        if (Notification.permission === "granted") {
+            enableNotificationsBtn.style.display = "none";
+        } else {
+            enableNotificationsBtn.style.display = "block";
+        }
     }
+
+    enableNotificationsBtn.addEventListener("click", function() {
+        Notification.requestPermission().then(function(permission) {
+            checkNotificationPermission();
+        });
+    });
+
+    checkNotificationPermission();
     toastr.options = {
         "closeButton": false,
         "debug": false,

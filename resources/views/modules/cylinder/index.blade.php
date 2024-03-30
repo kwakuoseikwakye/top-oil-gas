@@ -475,6 +475,53 @@
             $("#update-assign-cylinder-modal").modal("show");
         });
 
+        $("#order-table").on("click", ".send-payment-btn", function() {
+            let data = orderTable.row($(this).parents('tr')).data();
+
+            Swal.fire({
+                title: 'Are you sure you want to send payment link to this customer?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Submit'
+
+            }).then((result) => {
+
+                if (result.value) {
+                    Swal.fire({
+                        text: "Sending...",
+                        showConfirmButton: false,
+                        allowEscapeKey: false,
+                        allowOutsideClick: false
+                    });
+                    fetch(`${APP_URL}/api/payment/send_payment_link/${data.custno}/${data.order_id}`, {
+                        method: "GET",
+                    }).then(function(res) {
+                        return res.json()
+                    }).then(function(data) {
+                        if (!data.ok) {
+                            Swal.fire({
+                                text: data.msg,
+                                icon: "error"
+                            });
+                            return;
+                        }
+                        Swal.fire({
+                            text: "Payment link sent successfully",
+                            icon: "success"
+                        });
+
+                    }).catch(function(err) {
+                        if (err) {
+                            Swal.fire({
+                                text: "sending failed"
+                            });
+                        }
+                    })
+                }
+            })
+        });
+
         $("#cylinder-table").on("click", ".edit-btn", function() {
             let data = cylinderTable.row($(this).parents('tr')).data();
 
@@ -766,8 +813,6 @@
             })
 
         });
-
-        
     </script>
 
 

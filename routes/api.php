@@ -271,6 +271,7 @@ Route::resource("warehouse", WarehouseController::class);
 
 //fetch payments
 Route::prefix("payment")->group(function () {
+    Route::get("send_payment_link/{customer}/{order}", [PaymentController::class, "sendPaymentLink"]);
     Route::get("reports/{customer}/{cylinder}/{dateFrom}/{dateTo}", [PaymentController::class, "reports"]);
 });
 Route::resource("payment", PaymentController::class);

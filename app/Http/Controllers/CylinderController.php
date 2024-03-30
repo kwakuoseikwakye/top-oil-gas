@@ -396,7 +396,7 @@ class CylinderController extends Controller
             $validator = Validator::make($request->all(), [
                 "custno" => "required",
                 "cylcode" => "required",
-                // "transid" => "required",
+                "transid" => "required",
                 // "weight_id" => "required",
                 // "orderid" => "required",
                 // "createuser" => "required",
@@ -408,11 +408,18 @@ class CylinderController extends Controller
                     "msg" => "Cylinder Assignment failed. " . join(". ", $validator->errors()->all()),
                 ]);
             }
+            $customerOrder = CustomerCylinder::where("transid", $request->transid)->first();
+
+            if ($customerOrder->status == CustomerCylinder::PENDING_PAYMENT) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Customer payment is still pending"
+                ]);
+            }
 
             DB::beginTransaction();
             // $transid = strtoupper(bin2hex(random_bytes(4)));
             // $cylinder = Cylinder::find($request->cylinderNo);
-            $customerOrder = CustomerCylinder::where("transid", $request->transid)->first();
             CustomerCylinder::where("transid", $request->transid)->update([
                 "cylcode" => $request->cylcode,
                 "status" => CustomerCylinder::SUCCESS,
@@ -441,6 +448,7 @@ class CylinderController extends Controller
                 "longitude" => $locationData->longitude ?? $userIp,
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
+            event(new OrderCreated($customerOrder->order_id));
 
             DB::commit();
 
@@ -480,10 +488,17 @@ class CylinderController extends Controller
                     "msg" => "Cylinder Assignment update failed. " . join(". ", $validator->errors()->all()),
                 ]);
             }
-
-            DB::beginTransaction();
             $oldcylinder = CustomerCylinder::where('transid', $request->transid)->where('order_id', $request->order_id)->first();
             $cylinder = Cylinder::where('cylcode', $request->cylcode)->first();
+
+            if ($oldcylinder->status == CustomerCylinder::PENDING_PAYMENT) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Customer payment is still pending"
+                ]);
+            }
+
+            DB::beginTransaction();
 
             CustomerCylinder::where("transid", $request->transid)->update([
                 "cylcode" => $request->cylcode,
@@ -704,5 +719,4 @@ class CylinderController extends Controller
             ]);
         }
     }
-
 }

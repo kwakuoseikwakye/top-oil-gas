@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Arkesel\Arkesel;
 use App\Http\Controllers\api\v1\CustomerController;
 use App\Http\Resources\PaymentResource;
 use App\Models\CustomerCylinder;
 use App\Models\CylinderSize;
 use App\Models\Dispatch;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -184,7 +186,7 @@ class PaymentController extends Controller
             DB::beginTransaction();
             $payment  = Payment::where('transaction_id', $transactionId)->first();
 
-            if (empty($payment)) { 
+            if (empty($payment)) {
                 return response()->json(['status' => false, 'message' => 'Transaction not found'], 404);
             }
 
@@ -207,7 +209,6 @@ class PaymentController extends Controller
             DB::commit();
 
             return redirect(route("/success-payment"));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -217,6 +218,27 @@ class PaymentController extends Controller
                 "errLine" => $e->getLine(),
             ]);
         }
+    }
+
+    public function sendPaymentLink($customer, $orderid)
+    {
+        $user = User::where('userid', $customer)->first();
+        $payLink = PaymentController::generatePaymentLink($orderid);
+        if ($payLink['code'] === 200) {
+            $msg = <<<MSG
+            Dear customer,
+            Your order for a cylinder with order ID {$orderid} is successful.
+            Kindly click on the payment link below to complete your order. 
+            {$payLink['checkout_url']}
+            MSG;
+
+            $sms = new Arkesel('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
+            $sms->send($user->phone, $msg);
+        }
+
+        return response()->json([
+            "ok" => true,
+        ]);
     }
 
     public function reports($customer, $cylinder, $dateFrom, $dateTo)
