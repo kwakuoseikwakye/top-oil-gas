@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\v1;
 
 use App\Arkesel\Arkesel as ASms;
+use App\Events\OrderCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Log as ModelsLog;
 use App\Models\Cylinder;
@@ -146,6 +147,7 @@ class CylinderController extends Controller
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
 
+            event(new OrderCreated($orderid));
             DB::commit();
 
             return response()->json([
@@ -274,6 +276,7 @@ class CylinderController extends Controller
                 "longitude" => $locationData->longitude ?? $userIp,
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
+            event(new OrderCreated($orderid));
 
             DB::commit();
 

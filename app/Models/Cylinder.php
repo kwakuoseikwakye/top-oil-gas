@@ -41,7 +41,7 @@ class Cylinder extends Model
         return $this->belongsTo(CustomerLocation::class, 'location_id');
     }
 
-    public function cylinderWeight()
+    public function cylinderWeights()
     {
         return $this->belongsTo(CylinderSize::class, 'weight_id','id');
     }

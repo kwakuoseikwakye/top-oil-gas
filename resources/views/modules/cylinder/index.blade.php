@@ -123,15 +123,14 @@
         </div>
         <!--end::Entry-->
     </div>
-    {{-- @include('modules.cylinder.modals.file_upload') --}}
     @include('modules.cylinder.modals.order_cylinder')
     @include('modules.cylinder.modals.update_cylinder')
     @include('modules.cylinder.modals.assign_cylinder')
     @include('modules.cylinder.modals.update_assign_cylinder')
+    @include('modules.cylinder.modals.collect_payment')
     {{-- @include('modules.cylinder.modals.add_cylinder')
     @include('modules.cylinder.modals.info_assign')
     @include('modules.cylinder.modals.info') --}}
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
         var orderTable = $('#order-table').DataTable({
             dom: 'Bfrtip',
@@ -520,6 +519,13 @@
                     })
                 }
             })
+        });
+
+        $("#order-table").on("click", ".collect-payment-btn", function() {
+            let data = orderTable.row($(this).parents('tr')).data();
+            $("#cash-payment-modal").modal("show");
+            $("#cash-payment-orderid").val(data.order_id);
+            $("#cash-payment-customer").val(data.custno);
         });
 
         $("#cylinder-table").on("click", ".edit-btn", function() {

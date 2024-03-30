@@ -448,7 +448,7 @@ class CylinderController extends Controller
                 "longitude" => $locationData->longitude ?? $userIp,
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
-            event(new OrderCreated($customerOrder->order_id));
+            // event(new OrderCreated($customerOrder->order_id));
 
             DB::commit();
 

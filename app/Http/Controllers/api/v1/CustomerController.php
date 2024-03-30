@@ -73,10 +73,39 @@ class CustomerController extends Controller
                 'message' => 'Unauthorized - Token not provided or invalid'
             ], 401);
         }
+        $customerOrders =  CustomerCylinder::with(['cylinders'])->where('tblcustomer_cylinder.custno', $user->userid)
+            ->get()->groupBy('tblcustomer_cylinder.order_id');
+        $data = $customerOrders->map(function ($orders) {
+            $order = $orders->first();
+            return [
+                'order_id' => $order->order_id,
+                'status' => $order->status,
+                'cylinders' => $orders->flatMap->cylinders->map(function ($cylinder) {
+                    $cylinder_weights =  CylinderSize::where('id', $cylinder->weight_id)
+                        ->get();
+                    return [
+                        'owner' => $cylinder->owner,
+                        'cylcode' => $cylinder->cylcode,
+                        'size' => $cylinder->size,
+                        'weight_id' => $cylinder->weight_id,
+                        'location_id' => $cylinder->location_id,
+                        'requested' => $cylinder->requested,
+                        'cylinder_weights' => $cylinder_weights ? $cylinder_weights->map(function ($weight) {
+                            return [
+                                'id' => $weight->id,
+                                'desc' => $weight->desc, 
+                                'weight' => $weight->weight,
+                                'amount' => $weight->amount,
+                            ];
+                        }) : null,
+                    ];
+                }),
+            ];
+        });
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => CustomerCylinder::with(['cylinder', 'cylinder.cylinderWeight'])->where('tblcustomer_cylinder.custno', $user->userid)->get()
+            "data" => $data->values()
         ]);
     }
 

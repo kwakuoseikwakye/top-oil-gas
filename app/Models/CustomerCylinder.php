@@ -35,10 +35,10 @@ class CustomerCylinder extends Model
         return $this->belongsTo(Customer::class, "custno", "custno");
     }
 
-    public function cylinder()
+    public function cylinders()
     {
-        return $this->belongsTo(Cylinder::class, "cylcode", "cylcode");
-    }
+        return $this->hasMany(Cylinder::class, "cylcode", "cylcode");
+    } 
 
     public function vendor()
     {

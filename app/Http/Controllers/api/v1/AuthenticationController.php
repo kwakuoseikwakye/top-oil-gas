@@ -290,7 +290,7 @@ class AuthenticationController extends Controller
             }
 
             $token = $user->createToken('accessToken')->plainTextToken;
-            User::where("phone", $request->phone)->update([
+            DB::table('tbluser')->where("phone", $request->phone)->update([
                 'remember_token' => $token
             ]);
 

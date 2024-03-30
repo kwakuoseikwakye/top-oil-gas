@@ -12,6 +12,8 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
@@ -75,7 +77,10 @@ class PaymentController extends Controller
                 default => '',
             };
 
-            $transactionId = random_int(100000000000, 999999999999);
+            $transactionId = '';
+            for ($i = 0; $i < 12; $i++) {
+                $transactionId .= random_int(0, 9);
+            }
             $username = env("API_USER");
             $key = env("API_KEY");
             $url = env("APP_URL") . "/verify-payment";
@@ -197,7 +202,7 @@ class PaymentController extends Controller
                     Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
                     return response()->json(['status' => false, 'message' => 'Payment failed'], 402);
                 }
-                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::SUCCESS]);
+                CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
                 Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
             } else {
                 // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
@@ -222,6 +227,11 @@ class PaymentController extends Controller
 
     public function sendPaymentLink($customer, $orderid)
     {
+        $checkPayment = Payment::where('order_id', $orderid)->where('status', Payment::SUCCESS)->first();
+        if (!empty($checkPayment)) {
+            return response()->json(["ok" => false, "msg" => "Customer already made payment"]);
+        }
+
         $user = User::where('userid', $customer)->first();
         $payLink = PaymentController::generatePaymentLink($orderid);
         if ($payLink['code'] === 200) {
@@ -239,6 +249,98 @@ class PaymentController extends Controller
         return response()->json([
             "ok" => true,
         ]);
+    }
+
+    public function collectCashPayment(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "order_id" => "required",
+                "customer" => "required",
+                "amount" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "Collecting payment failed. " . join(". ", $validator->errors()->all()),
+                ], 422);
+            }
+
+            $checkPayment = Payment::where('order_id', $request->order_id)->where('status', Payment::SUCCESS)->first();
+            if (!empty($checkPayment)) {
+                return response()->json(["ok" => false, "msg" => "Customer already made payment"]);
+            }
+
+            $paymentDetails = CustomerCylinder::select("weight_id")->where('order_id', $request->order_id)->get()->toArray();
+            $weightAmt = [];
+            // return $paymentDetails;
+            if (count($paymentDetails) === 0) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => "No order available for payment",
+                ]);
+            }
+            foreach ($paymentDetails as $payment) {
+                $cylinderSize = CylinderSize::where('id', $payment['weight_id'])->first();
+                if ($cylinderSize) {
+                    $quantity = CylinderSize::where('id', $payment['weight_id'])->count();
+                    $amountForPayment = (int)$quantity * (int)$cylinderSize->amount;
+                    $weightAmt[] = $amountForPayment;
+                } else {
+                    return response()->json([
+                        "ok" => false,
+                        "msg" => "No amount available for this package",
+                    ]);
+                }
+            }
+
+            // return $weightAmt;
+            $amount =  array_sum($weightAmt);
+
+
+
+            if ($amount !== (int)$request->amount) {
+                return response()->json([
+                    "ok" => false,
+                    "msg" => 'Amount to be paid is GHS ' . $amount . '.00'
+                ]);
+            }
+
+            $transactionId = '';
+            for ($i = 0; $i < 12; $i++) {
+                $transactionId .= random_int(0, 9);
+            }
+
+            Payment::insert([
+                "transid" => strtoupper(bin2hex(random_bytes(4))),
+                "transaction_id" => $transactionId,
+                "amount_paid" => $amount,
+                "order_id" => $request->order_id,
+                "custno" => $request->customer,
+                "status" => Payment::SUCCESS,
+                "payment_mode" => "offline",
+                "createuser" => $request->createuser,
+            ]);
+
+            CustomerCylinder::where('order_id', $request->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
+            Dispatch::where('order_id', $request->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+
+            return response()->json([
+                "ok" => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("An error occured during cylinder assignment", [
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ]);
+            return response()->json([
+                "status" => false,
+                "message" => "Request failed. An internal error occured",
+                "errMsg" => $e->getMessage(),
+                "trace" => $e->getTrace(),
+            ], 500);
+        }
     }
 
     public function reports($customer, $cylinder, $dateFrom, $dateTo)
