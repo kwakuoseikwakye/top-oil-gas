@@ -131,7 +131,7 @@
     {{-- @include('modules.cylinder.modals.add_cylinder')
     @include('modules.cylinder.modals.info_assign')
     @include('modules.cylinder.modals.info') --}}
-
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
         var orderTable = $('#order-table').DataTable({
             dom: 'Bfrtip',
@@ -767,52 +767,7 @@
 
         });
 
-        function errors() {
-
-            Swal.fire({
-                title: 'Are you sure you want to merge cylinders?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Submit'
-
-            }).then((result) => {
-
-                if (result.value) {
-                    Swal.fire({
-                        text: "Processing...",
-                        showConfirmButton: false,
-                        allowEscapeKey: false,
-                        allowOutsideClick: false
-                    });
-                    fetch(`${APP_URL}/api/import_cylinder`, {
-                        method: "GET",
-                    }).then(function(res) {
-                        return res.json()
-                    }).then(function(data) {
-                        if (!data.ok) {
-                            Swal.fire({
-                                text: data.msg,
-                                icon: "error"
-                            });
-                            return;
-                        }
-                        Swal.fire({
-                            text: "Cylinder added successfully",
-                            icon: "success"
-                        });
-                        cylinderTable.ajax.reload(false, null);
-
-                    }).catch(function(err) {
-                        if (err) {
-                            Swal.fire({
-                                text: "Adding cylinder failed"
-                            });
-                        }
-                    })
-                }
-            })
-        }
+        
     </script>
 
 

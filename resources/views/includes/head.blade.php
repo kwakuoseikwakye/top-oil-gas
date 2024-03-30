@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="{{ asset('bootstrap-select.min.css') }}">
     {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0/dist/css/bootstrap-select.min.css" rel="stylesheet"> --}}
     {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta/css/bootstrap-select.min.css" integrity="sha512-S/noEArtFzz8UzFxmVcWfUy5f1zE6cmk7ny8spHuuhSuq9mPUZONHtO+U1Bna9tRn6kAo3mRIsWSsqWbWyhUQQ==" crossorigin="anonymous" referrerpolicy="no-referrer" /> --}}
-
+    <link href="{{ asset('css/toastr.min.css') }}" rel="stylesheet">
     <script src="{{ asset('js/app.js') }}"></script>
 
 

@@ -78,6 +78,7 @@
 <!--begin::Page Scripts(used by this page)-->
 <script src="{{ asset('assets/js/pages/widgets.js') }}"></script>
 <script src="{{ asset('bootstrap-select.min.js') }}"></script>
+<script src="{{ asset('js/toastr.min.js') }}"></script>
 <!-- select2 -->
 {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0/dist/js/bootstrap-select.min.js"></script> --}}
 {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta/js/bootstrap-select.min.js" integrity="sha512-I0sRMhP0loaoXaytYuOHHU3pGmyQklf5irZZ8cSaIPi9ETq5qvfcDAiBJ4vqpaq8xeUe7ZVwYM5xqQlxYDK3Uw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
@@ -87,6 +88,67 @@
 <script>
     // Initialize Bootstrap Select
     $('.selectpicker').selectpicker();
+    const enableNotificationsBtn = document.getElementById("enable-notifications-btn");
+    if (Notification.permission === "granted") {
+        enableNotificationsBtn.style.display = "none";
+    } else {
+        enableNotificationsBtn.style.display = "block";
+        enableNotificationsBtn.addEventListener("click", function() {
+            Notification.requestPermission();
+        });
+    }
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-full-width",
+        "preventDuplicates": false,
+        "onclick": function() {
+            let URLParts = location.href.split("/");
+            let currentRoute = URLParts[URLParts.length - 1];
+            if (currentRoute == "orders") {
+                // Do nothing if we are already in the orders module
+                return;
+            }
+
+            // Go to the orders module if we are not there
+            window.location.href = `${APP_URL}/orders`;
+        },
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "10000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+
+    let notificatonSound = new Audio("{{ asset('pulse_notification.mp3') }}");
+    Echo.channel('orders').listen('OrderCreated', (e) => {
+        console.log(e.orderid);
+        const notificationMsg = `New Order created with ID ${e.orderid}`;
+        toastr.options.positionClass = "toast-top-full-width";
+        toastr.warning(notificationMsg);
+
+        let URLPart = location.href.split("/");
+        let currentRoute = URLPart[URLPart.length - 1];
+        if (currentRoute == "orders") {
+            orderTable.ajax.reload(false, null);
+        }
+
+        if (Notification.permission === "granted") {
+            let n = new Notification("Top Oil", {
+                body: notificationMsg,
+                // icon: `${APP_URL}/favicon.ico`,
+            });
+        }
+
+        notificatonSound.play();
+        // Use the received order data to update the DataTables table
+        // $('#order-table').DataTable().ajax.reload(false, null);
+    });
 </script>
 @include('includes.change_password')
 {{-- @include('modules.dispatch')

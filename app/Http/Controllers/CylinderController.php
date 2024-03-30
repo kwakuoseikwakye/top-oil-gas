@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Stevebauman\Location\Facades\Location;
 use App\Arkesel\Arkesel as Sms;
+use App\Events\OrderCreated;
 use App\Models\CustomerLocation;
 use App\Models\Payment as ModelsPayment;
 
@@ -68,13 +69,13 @@ class CylinderController extends Controller
                 "location_id" => "required",
                 "customer" => "required",
                 "delivery_mode" => "required",
-                // "cylcode" => "required",
+                "weight_id" => "required",
                 "payment_type" => "required",
             ], [
                 "customer.required" => "No customer selected",
                 "location_id.required" => "No location supplied",
                 "delivery_mode.required" => "No location supplied",
-                // "cylcode.required" => "No cylinder selected",
+                "weight_id.required" => "No package selected",
                 "payment_type.required" => "No payment type selected",
             ]);
 
@@ -85,21 +86,13 @@ class CylinderController extends Controller
                 ], 422);
             }
 
-            $cylinderExists = CustomerCylinder::where('cylcode', $request->cylcode)->first();
-            if ($cylinderExists) {
-                return response()->json([
-                    "ok" => false,
-                    "msg" => "Cylinder already assigned"
-                ], 422);
-            }
-
-            $customerCylinderExists = CustomerCylinder::where('custno', $request->customer)->exists();
-            if ($customerCylinderExists) {
-                return response()->json([
-                    "ok" => false,
-                    "msg" => "Customer already assigned to a cylinder, please use the refill button for cylinder refill"
-                ], 422);
-            }
+            // $customerCylinderExists = CustomerCylinder::where('custno', $request->customer)->exists();
+            // if ($customerCylinderExists) {
+            //     return response()->json([
+            //         "ok" => false,
+            //         "msg" => "Customer already assigned to a cylinder, please use the refill button for cylinder refill"
+            //     ], 422);
+            // }
 
             $customerLocationExists = CustomerLocation::where('id', $request->location_id)->where('custno', $request->customer)->exists();
             if (!$customerLocationExists) {
@@ -123,7 +116,7 @@ class CylinderController extends Controller
                 ], 422);
             }
 
-            $cylinder = Cylinder::where('cylcode', $request->cylcode)->first();
+            // $cylinder = Cylinder::where('cylcode', $request->cylcode)->first();
             $user = User::where('userid', $request->customer)->first();
 
             DB::beginTransaction();
@@ -135,7 +128,7 @@ class CylinderController extends Controller
                 // "cylcode" => $request->cylcode,
                 "date_acquired" => $request->date ?? date("Y-m-d H:i:s"),
                 "location_id" => $request->location_id,
-                "weight_id" => $cylinder->weight_id,
+                "weight_id" => $request->weight_id,
                 "status" => CustomerCylinder::PENDING_PAYMENT,
                 "deleted" =>  0,
                 "createdate" =>  date("Y-m-d H:i:s"),
@@ -172,6 +165,7 @@ class CylinderController extends Controller
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
 
+            event(new OrderCreated($orderid));
             DB::commit();
 
             if ($request->payment_type == "online") {
@@ -711,137 +705,4 @@ class CylinderController extends Controller
         }
     }
 
-    public function import()
-    {
-        try {
-            DB::beginTransaction();
-            // Excel::import(new CylindersImport, request()->file('file'));
-
-            $barcodes = Customer::where("deleted", 0)
-                ->get();
-
-            foreach ($barcodes as $barcode) {
-
-                DB::table("tblcylinder")->insert([
-                    'transid' => bin2hex(random_bytes(4)),
-                    'owner' => $barcode->fname,
-                    'barcode' => $barcode->lname,
-                    'cylcode' => $barcode->lname,
-                    'size' => $barcode->pob,
-                    'notes' => $barcode->mname,
-                    'images2' => $barcode->occupation,
-                    'images' => $barcode->landmark,
-                    'createuser' => "admin",
-                    'createdate' => date("Y-m-d H:i:s"),
-                ]);
-
-                DB::table("tblcustomer_cylinder")->insert([
-                    'transid' => bin2hex(random_bytes(4)),
-                    'custno' => $barcode->custno,
-                    'barcode' => $barcode->lname,
-                    'cylcode' => $barcode->lname,
-                    'status' => "1",
-                    'createuser' => "admin",
-                    'createdate' => date("Y-m-d H:i:s"),
-                ]);
-            }
-
-            Customer::where("deleted", 0)->update([
-                "lname" => "",
-                "mname" => "",
-                "pob" => "",
-                "occupation" => "",
-                "landmark" => "",
-            ]);
-            DB::commit();
-
-            return response()->json([
-                "ok" => true,
-                "msg" => "Upload successful",
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                "ok" => false,
-                "msg" => "There is an error in your excel file upload",
-                "error" => [
-                    "msg" => $th->__toString(),
-                ]
-            ]);
-        }
-    }
-
-    public function check()
-    {
-        try {
-            DB::beginTransaction();
-
-            $cylinders = CustomerCylinder::where("deleted", 0)->get();
-
-            foreach ($cylinders as $cylinder) {
-                $checkB = Customer::where("deleted", 0)->where("custno", "=", $cylinder->custno)->first();
-                $cylinderB = Cylinder::where("deleted", 0)->where("lname", "=", $cylinder->barcode)->first();
-                if (empty($checkB) && empty($cylinderB)) {
-                    Customer::insert([
-                        'transid' => bin2hex(random_bytes(4)),
-                        'custno' => 'CUS-' . bin2hex(random_bytes(4)),
-                        'lname'     => $cylinder->barcode,
-                        'fname'    => $cylinder->owner,
-                        'createuser' => 'admin',
-                        'createdate' => date("Y-m-d H:i:s"),
-                    ]);
-
-                    $fetchCustomer = Customer::where("fname", $cylinder->owner)->first();
-
-                    $checkCusCyl = DB::table("tblcustomer_cylinder")
-                        ->where("barcode", $fetchCustomer->barcode)
-                        ->first();
-
-                    if (empty($checkCusCyl)) {
-                        DB::table("tblcustomer_cylinder")->insert([
-                            'transid' => bin2hex(random_bytes(4)),
-                            'custno' => $fetchCustomer->custno,
-                            'barcode' => $fetchCustomer->barcode,
-                            'cylcode' => $fetchCustomer->barcode,
-                            'status' => "1",
-                            'createuser' => "admin",
-                            'createdate' => date("Y-m-d H:i:s"),
-                        ]);
-                    } else {
-                        CustomerCylinder::where("barcode", $fetchCustomer->barcode)
-                            ->update([
-                                'custno' => $fetchCustomer->custno,
-                                'barcode' => $fetchCustomer->barcode,
-                                'cylcode' => $fetchCustomer->barcode,
-                                'status' => "1",
-                            ]);
-                    }
-                } else {
-                    $checkB->update([
-                        "lname" => "",
-                    ]);
-                }
-            }
-            DB::commit();
-
-            return response()->json([
-                "ok" => true,
-                "msg" => "Upload successful",
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                "ok" => false,
-                "msg" => "There is an error in your excel file upload",
-                "error" => [
-                    "msg" => $th->__toString(),
-                ]
-            ]);
-        }
-    }
-
-    public function away()
-    {
-        return response()->json([
-            "msg" => "away"
-        ]);
-    }
 }

@@ -44,16 +44,16 @@
                                 @endforeach --}}
                             </select>
                         </div>
-                        {{-- <div class="col">
-                            <label for="">Cylinder *</label>
-                            <select type="text" name="cylcode" data-live-search="true" class="form-control  selectpicker"
+                        <div class="col">
+                            <label for="">Cylinder Package*</label>
+                            <select type="text" name="weight_id" data-live-search="true" class="form-control  selectpicker"
                                 required>
-                                @foreach ($cylinderWeight as $item)
-                                    <option value="{{ $item->cylcode }}">{{ $item->cylcode }} ({{ $item->weight }} -
+                                @foreach ($weights as $item)
+                                    <option value="{{ $item->id }}">{{ $item->desc }} ({{ $item->weight }} -
                                         {{ $item->amount }})</option>
                                 @endforeach
                             </select>
-                        </div> --}}
+                        </div>
                     </div>
 
                     <div class="row mt-3">
@@ -144,7 +144,7 @@
                     });
                     $("#order-cylinder-modal").modal('hide');
                     $("select").val(null).trigger('change');
-                    orderTable.ajax.reload(false, null);
+                    // orderTable.ajax.reload(false, null);
                     addCylinder.reset();
 
                 }).catch(function(err) {
