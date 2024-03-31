@@ -18,10 +18,13 @@
         "lodash": "^4.17.19",
         "postcss": "^8.2.1",
         "postcss-import": "^12.0.1",
-        "tailwindcss": "^2.0.2"
+        "tailwindcss": "^2.0.2",
+        "vue-loader": "^16.1.0"
     },
     "dependencies": {
+        "@inertiajs/vue3": "^1.0.15",
         "laravel-echo": "^1.16.0",
-        "pusher-js": "^8.4.0-rc2"
+        "pusher-js": "^8.4.0-rc2",
+        "vue": "^3.4.21"
     }
 }

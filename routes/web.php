@@ -8,6 +8,7 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,13 +21,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/verify-payment', [PaymentController::class, 'verifyPayment']);
+Route::get('/verify-payment', [PaymentController::class, 'verifyCustomerPaymentLink']);
 Route::get('/cancel-payment', function () {
     return view("cancel_payment");
 });
-Route::get('/success-payment', function () {
+Route::get('/payment/successful', function () {
     return view("success_payment");
-});
+})->name('payment.successful');
 
 Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
 Route::get('dispatch', [RouteController::class, 'vendors'])->name('dispatch');
