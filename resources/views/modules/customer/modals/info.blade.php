@@ -1,6 +1,6 @@
 <div class="modal fade" id="info-customer-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document" style="min-width:80%">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">CUSTOMER DETAILS</h5>
@@ -12,7 +12,7 @@
                 <div class="row">
                     <div class="col text-center">
                         <div>
-                            <img height="150" width="150"
+                            <img height="150" width="150" src="{{ asset('avatar.png') }}"
                                 alt="customer's photo" class="rounded-circle" id="info-customer-image">
                         </div>
 
@@ -47,9 +47,9 @@
                                         ID Number:
                                         <span id="info-customer-id-number"></span>
                                     </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{-- <li class="list-group-item d-flex justify-content-between align-items-center">
                                        <img alt="ID's photo" class="rounded-circle" id="info-customer-id-image">             
-                                    </li>
+                                    </li> --}}
                                 </ul>
                             </div>
                         </div>
