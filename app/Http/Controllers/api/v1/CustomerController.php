@@ -73,39 +73,75 @@ class CustomerController extends Controller
                 'message' => 'Unauthorized - Token not provided or invalid'
             ], 401);
         }
-        $customerOrders =  CustomerCylinder::with(['cylinders'])->where('tblcustomer_cylinder.custno', $user->userid)
-            ->get()->groupBy('tblcustomer_cylinder.order_id');
+        $customerOrders =  CustomerCylinder::select('tblcustomer_cylinder.order_id', 'tblcustomer_cylinder.status', 'tblcustomer_cylinder.cylcode')->with(['cylinders', 'cylinders.cylinderWeights'])->where('tblcustomer_cylinder.custno', $user->userid)
+            ->get()->groupBy(function ($item) {
+                return $item['order_id'] . $item['status'];
+            });
         $data = $customerOrders->map(function ($orders) {
             $order = $orders->first();
+            $cylinders = $orders->flatMap->cylinders->map(function ($cylinder) {
+                $cylinder_weights =  CylinderSize::where('id', $cylinder->weight_id)
+                    ->get();
+                return [
+                    'owner' => $cylinder->owner,
+                    'cylcode' => $cylinder->cylcode,
+                    'size' => $cylinder->size,
+                    'weight_id' => $cylinder->weight_id,
+                    'location_id' => $cylinder->location_id,
+                    'requested' => $cylinder->requested,
+                    'cylinder_weights' => $cylinder_weights ? $cylinder_weights->map(function ($weight) {
+                        return [
+                            'id' => $weight->id,
+                            'desc' => $weight->desc,
+                            'weight' => $weight->weight,
+                            'amount' => $weight->amount,
+                        ];
+                    }) : null,
+                ];
+            });
             return [
                 'order_id' => $order->order_id,
                 'status' => $order->status,
-                'cylinders' => $orders->flatMap->cylinders->map(function ($cylinder) {
-                    $cylinder_weights =  CylinderSize::where('id', $cylinder->weight_id)
-                        ->get();
-                    return [
-                        'owner' => $cylinder->owner,
-                        'cylcode' => $cylinder->cylcode,
-                        'size' => $cylinder->size,
-                        'weight_id' => $cylinder->weight_id,
-                        'location_id' => $cylinder->location_id,
-                        'requested' => $cylinder->requested,
-                        'cylinder_weights' => $cylinder_weights ? $cylinder_weights->map(function ($weight) {
-                            return [
-                                'id' => $weight->id,
-                                'desc' => $weight->desc, 
-                                'weight' => $weight->weight,
-                                'amount' => $weight->amount,
-                            ];
-                        }) : null,
-                    ];
-                }),
+                'cylinders' => $cylinders,
             ];
         });
+
+
         return response()->json([
             "status" => true,
             "message" => "Request successful",
             "data" => $data->values()
+        ]);
+    }
+
+    public function getOrdersById(Request $request, $orderid)
+    {
+        $token = $this->extractToken($request);
+
+        if (!empty($token)) {
+            $user = User::where('remember_token', $token)->first();
+            if (empty($user)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized - Token not provided or invalid'
+                ], 401);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized - Token not provided or invalid'
+            ], 401);
+        }
+
+        $orders =  CustomerCylinder::with(['cylinders', 'cylinders.cylinderWeights'])
+            ->where('tblcustomer_cylinder.custno', $user->userid)
+            ->where('tblcustomer_cylinder.order_id', $orderid)
+            ->get();
+
+        return response()->json([
+            "status" => true,
+            "message" => "Request successful",
+            "data" => $orders
         ]);
     }
 
@@ -193,7 +229,7 @@ class CustomerController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Request successful",
-            "data" => CustomerLocation::with(['cylinders', 'cylinders.cylinderWeight'])->where('tblcustomer_location.custno', $user->userid)->get()
+            "data" => CustomerLocation::with(['cylinders', 'cylinders.cylinderWeights'])->where('tblcustomer_location.custno', $user->userid)->get()
         ]);
     }
 

@@ -126,8 +126,8 @@
         },
         "showDuration": "300",
         "hideDuration": "1000",
-        "timeOut": "10000",
-        "extendedTimeOut": "1000",
+        "timeOut": "15000",
+        "extendedTimeOut": "2000",
         "showEasing": "swing",
         "hideEasing": "linear",
         "showMethod": "fadeIn",
@@ -157,6 +157,28 @@
         notificatonSound.play();
         // Use the received order data to update the DataTables table
         // $('#order-table').DataTable().ajax.reload(false, null);
+    });
+
+    //Payment made notification
+    Echo.channel('payment-made').listen('PaymentMade', (e) => {
+        console.log(e.orderid);
+        const notificationMsg = `New Payment made with ID ${e.orderid}`;
+        toastr.options.positionClass = "toast-top-full-width";
+        toastr.success(notificationMsg);
+
+        let URLPart = location.href.split("/");
+        let currentRoute = URLPart[URLPart.length - 1];
+        if (currentRoute == "orders") {
+            orderTable.ajax.reload(false, null);
+        }
+
+        if (Notification.permission === "granted") {
+            let n = new Notification("Top Oil", {
+                body: notificationMsg,
+            });
+        }
+
+        notificatonSound.play();
     });
 </script>
 @include('includes.change_password')

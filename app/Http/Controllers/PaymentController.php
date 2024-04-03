@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Arkesel\Arkesel;
+use App\Events\PaymentMade;
 use App\Http\Controllers\api\v1\CustomerController;
 use App\Http\Resources\PaymentResource;
 use App\Models\CustomerCylinder;
@@ -354,31 +355,26 @@ class PaymentController extends Controller
                 return redirect(route("/cancel-payment"));
             }
 
+            $payment = DB::table('tblpayment')->where('transaction_id', $transactionId)->first();
 
             DB::beginTransaction();
-            $payment  = Payment::where('transaction_id', $transactionId)->first();
 
             if (empty($payment)) {
                 return redirect(route("/cancel-payment"));
             }
 
             if ($statusCode == "000") {
+                event(new PaymentMade($payment->order_id));
+
                 Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
-                if (empty($payment)) {
-                    // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
-                    Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
-                    return redirect(route("/cancel-payment"));
-                }
                 CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
                 Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
-                return redirect()->route('payment.successful')->with('success', 'Payment was successful!');
- 
-            } else { 
+                return redirect()->route('payment.successful', ['trans' => $transactionId, 'orderid' => $payment->order_id]);
+            } else {
                 // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
                 Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);
                 return redirect(route("/cancel-payment"));
             }
-
 
             DB::commit();
         } catch (\Exception $e) {
@@ -390,11 +386,6 @@ class PaymentController extends Controller
                 "errLine" => $e->getLine(),
             ]);
         }
-    }
-
-    public function successful()
-    {
-        return Inertia::render('PaymentSuccessful');
     }
 
     public function reports($customer, $cylinder, $dateFrom, $dateTo)

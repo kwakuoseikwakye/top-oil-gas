@@ -43,6 +43,6 @@ class Cylinder extends Model
 
     public function cylinderWeights()
     {
-        return $this->belongsTo(CylinderSize::class, 'weight_id','id');
+        return $this->hasMany(CylinderSize::class, 'id','weight_id');
     }
 }

@@ -87,6 +87,7 @@ Route::prefix("v1")->group(function () {
         Route::get("get_pickup", [MobileCustomerController::class, "getPickupStations"]);
         Route::get("get_my_orders", [MobileCustomerController::class, "getMyOrders"]);
         Route::get("get_orders/{orderid}", [MobileCustomerController::class, "getAllOrders"]);
+        Route::get("get_order_by_id/{orderid}", [MobileCustomerController::class, "getOrdersById"]); 
         Route::post("add_orders", [MobileCustomerController::class, "addOrders"]);
         Route::post("bulk_order", [MobileCustomerController::class, "bulkOrder"]);
         Route::post("purchase_now", [MobileCustomerController::class, "purchaseNow"]);

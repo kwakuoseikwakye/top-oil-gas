@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Stevebauman\Location\Facades\Location;
 use App\Arkesel\Arkesel as Sms;
+use App\Events\OrderAssigned;
 use App\Events\OrderCreated;
 use App\Models\CustomerLocation;
 use App\Models\Payment as ModelsPayment;
@@ -165,7 +166,14 @@ class CylinderController extends Controller
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
 
+            $data = [
+                "customer" => $user->userid,
+                "orderid" => $orderid,
+                "message" => "Order created successfully"
+            ];
+            $orderEventDataObject = (object) $data;
             event(new OrderCreated($orderid));
+            event(new OrderAssigned($orderEventDataObject));
             DB::commit();
 
             if ($request->payment_type == "online") {
@@ -448,7 +456,15 @@ class CylinderController extends Controller
                 "longitude" => $locationData->longitude ?? $userIp,
                 "latitude" => $locationData->latitude ?? $userIp,
             ]);
-            // event(new OrderCreated($customerOrder->order_id));
+
+            $orders = CustomerCylinder::where('transid', $request->transid)->first();
+            $data = [
+                "customer" => $request->custno,
+                "orderid" => $orders->order_id,
+                "message" => "Order assigned successfully"
+            ];
+            $orderEventDataObject = (object) $data;
+            event(new OrderAssigned($orderEventDataObject));  
 
             DB::commit();
 

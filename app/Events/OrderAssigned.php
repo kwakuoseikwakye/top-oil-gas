@@ -10,19 +10,23 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderCreated implements ShouldBroadcast
+class OrderAssigned implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public $customer;
     public $orderid;
+    public $message; 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($orderid)
+    public function __construct(object $data)
     {
-        $this->orderid = $orderid; 
+        $this->customer = $data->customer;
+        $this->orderid = $data->orderid;
+        $this->message = $data->message;
     }
 
     /**
@@ -32,6 +36,6 @@ class OrderCreated implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('orders');
+        return new Channel('order-assigned'); 
     }
 }

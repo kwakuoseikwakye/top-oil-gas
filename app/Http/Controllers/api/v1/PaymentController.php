@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\v1;
 
+use App\Events\PaymentMade;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerCylinder;
@@ -204,9 +205,9 @@ class PaymentController extends Controller
             DB::beginTransaction();
             $payment  = Payment::where('transaction_id', $transactionId)->first();
 
-            if (empty($payment)) { 
+            if (empty($payment)) {
                 return response()->json(['status' => false, 'message' => 'Transaction not found'], 404);
-            } 
+            }
 
             if ($request->payment_status_code == "000") {
                 if (empty($payment)) {
@@ -217,6 +218,7 @@ class PaymentController extends Controller
                 Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
                 CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
                 Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+                event(new PaymentMade($payment->order_id));
             } else {
                 // CustomerCylinder::where('order_id', $payment->order_id)->update(['status' => CustomerCylinder::CANCELLED]);
                 Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::CANCELLED, 'modifydate' => date('Y-m-d H:i:s')]);

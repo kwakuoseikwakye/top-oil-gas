@@ -5,6 +5,9 @@ use App\Http\Controllers\CylinderController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\OTPController;
 use App\Http\Controllers\PaymentController;
+use App\Models\CustomerCylinder;
+use App\Models\Dispatch;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +28,10 @@ Route::get('/verify-payment', [PaymentController::class, 'verifyCustomerPaymentL
 Route::get('/cancel-payment', function () {
     return view("cancel_payment");
 });
-Route::get('/payment/successful', function () {
+Route::get('/payment/successful/{trans}/{orderid}', function ($trans, $orderid) {
+    Payment::where('transaction_id', $trans)->update(['status' => Payment::SUCCESS]);
+    CustomerCylinder::where('order_id', $orderid)->update(['status' => CustomerCylinder::PENDING_ASSIGNMENT]);
+    Dispatch::where('order_id', $orderid)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
     return view("success_payment");
 })->name('payment.successful');
 
