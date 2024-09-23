@@ -12,7 +12,6 @@
         "laravel/framework": "^8.12",
         "laravel/sanctum": "^2.15",
         "laravel/tinker": "^2.5",
-        "maatwebsite/excel": "^3.1",
         "milon/barcode": "^8.0",
         "spatie/geocoder": "^3.10",
         "stevebauman/location": "^6.1"
