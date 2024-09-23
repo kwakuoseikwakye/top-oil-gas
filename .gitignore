@@ -6,4 +6,4 @@ vendor/
 .env
 .vscode/
 .idea/
-.vscode/
+.history/
