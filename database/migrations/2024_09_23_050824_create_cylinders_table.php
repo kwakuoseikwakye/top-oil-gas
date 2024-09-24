@@ -15,7 +15,7 @@ class CreateCylindersTable extends Migration
     public function up()
     {
         Schema::create('cylinders', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('uuid_generate_v4()'));
+            $table->uuid('id')->primary();
             $table->string('owner', 50);
             $table->string('code', 50);
             $table->uuid('weight_id');

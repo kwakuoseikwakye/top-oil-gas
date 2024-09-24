@@ -17,11 +17,11 @@ class CreateCustomersTable extends Migration
         DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
 
         Schema::create('customers', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('uuid_generate_v4()'));
+            $table->uuid('id')->primary();
             $table->string('fname', 50);
             $table->string('lname', 50);
-            $table->string('mname', 50);
-            $table->string('address');
+            $table->string('mname', 50)->nullable();
+            $table->string('address')->nullable();
             $table->string('id_no', 100)->nullable();
             $table->string('id_type', 20)->nullable();
             $table->string('id_link')->nullable();

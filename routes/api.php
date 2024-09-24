@@ -12,6 +12,8 @@ use App\Http\Controllers\api\v1\DashboardController as MobileDashboardController
 use App\Http\Controllers\api\v1\EmployeeController as MobileEmployeeController;
 use App\Http\Controllers\api\v1\PaymentController as V1PaymentController;
 use App\Http\Controllers\api\v1\WarehouseController as MobileWarehouseController;
+use App\Http\Controllers\api\v2\AuthController;
+use App\Http\Controllers\api\v2\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
 use App\Http\Controllers\DashboardController;
@@ -38,6 +40,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix("v2")->group(function () {
+    Route::post("login", [AuthController::class, "login"]);
+    Route::post("signup", [AuthController::class, "signUp"]);
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('forgot-password', [AuthController::class, 'passwordReset']);
+});
+
+Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum'], function () {
+    Route::prefix("users")->group(function () {
+        Route::patch('/change-password', [UserController::class, 'changePassword']);
+    });
 });
 
 /**

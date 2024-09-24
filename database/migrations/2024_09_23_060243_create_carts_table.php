@@ -15,7 +15,7 @@ class CreateCartsTable extends Migration
     public function up()
     {
         Schema::create('carts', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('uuid_generate_v4()'));
+            $table->uuid('id')->primary();
             $table->uuid('customer_id');
             $table->uuid('cylinder_id');
             $table->integer('quantity');

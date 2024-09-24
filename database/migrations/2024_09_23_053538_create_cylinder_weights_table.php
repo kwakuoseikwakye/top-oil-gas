@@ -15,7 +15,7 @@ class CreateCylinderWeightsTable extends Migration
     public function up()
     {
         Schema::create('cylinder_weights', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('uuid_generate_v4()'));
+            $table->uuid('id')->primary();
             $table->string('desc', 100);
             $table->string('weight', 100);
             $table->double('amount', 10, 2);

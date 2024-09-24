@@ -17,16 +17,16 @@ class CreateUsersTable extends Migration
         // DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
 
         Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('uuid_generate_v4()'));
+            $table->uuid('id')->primary();
             $table->uuid('customer_id');
             $table->string('username', 100);
-            $table->string('phone', 20);
-            $table->string('email')->unique();
+            $table->string('phone', 20)->unique();
+            $table->string('email')->unique()->nullable();
             $table->string('password');
             $table->string('usertype', 20);
             $table->boolean('verified')->default(false);
             $table->boolean('backend_registered')->default(false);
-            $table->rememberToken();
+            $table->rememberToken()->nullable();
             $table->dateTime('last_login')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();

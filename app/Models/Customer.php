@@ -4,36 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Customer extends Model
 {
-    use HasFactory;
-    const CREATED_AT = "createdate";
-    const UPDATED_AT = "modifydate";
+    use HasFactory, SoftDeletes;
 
-    protected $table = "tblcustomer";
-    protected $primaryKey = "transid";
+    protected $table = "customers";
+    protected $primaryKey = "id";
     public $incrementing = false;
-    protected $keyType = "string";
+    protected $keyType = 'string';
 
-    protected $fillable = [
-        "transid", "custno", "title", "fname",
-        "mname", "lname", "gender", "dob",
-        "pob", "marital_status", "occupation",
-        "home_address", "landmark", "town",
-        "phone", "gpsaddress", "streetname",
-        "region", "id_type", "id_no", "id_link",
-         "longitude", "latitude", "deleted", "createdate",
-        "createuser", "modifydate", "modifyuser",
-    ];
+    protected $fillable = ["id", "fname", "mname", "lname", "gender", "address", "region", "id_type", "id_no", "id_link", "longitude", "latitude", "picture"];
 
-    public function cylinders()
+    protected static function boot()
     {
-        return $this->hasMany(CustomerCylinder::class, "custno", "custno");
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, "custno", "userid");
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();  // Ensure UUID generation
+            }
+        });
     }
 }

@@ -57,6 +57,8 @@ if (!function_exists('apiErrorResponse')) {
                   'trace_id' => Str::uuid()->toString(),
             ];
 
+            Log::warning($response);
+
             if (!is_null($e)) {
                   Log::error($message, [
                         'file' => $e->getFile(),
