@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\Status;
+use App\Models\CustomerLocation;
 use App\Models\Orders;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -83,6 +84,34 @@ class UserService
                   return apiSuccessResponse("Order successful");
             } catch (\Throwable $e) {
                   return apiErrorResponse("Internal error occured", 500, $e);
+            }
+      }
+
+      public function createLocation(array $request, $user)
+      {
+            $validator = Validator::make(
+                  $request,
+                  [
+                        "name" => "required|min:10",
+                        "phone1" => "required|min:10",
+                        "address" => "required",
+                        "phone2" => "nullable",
+                        "longitude" => "nullable",
+                        "latitude" => "nullable",
+                        "additional_info" => "nullable",
+                  ]
+            );
+
+            if ($validator->fails()) {
+                  return apiErrorResponse("Adding location failed. " . join(" ", $validator->errors()->all()), 422);
+            }
+
+            try {
+                  CustomerLocation::create($validator->validated() + ['customer_id' => $user->customer_id]);
+
+                  return apiSuccessResponse("Location added successfully");
+            } catch (\Exception $th) {
+                  return apiErrorResponse("An internal error occured", 500, $th);
             }
       }
 }
