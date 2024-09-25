@@ -14,7 +14,6 @@ class CreateCustomersTable extends Migration
      */
     public function up()
     {
-        DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
 
         Schema::create('customers', function (Blueprint $table) {
             $table->uuid('id')->primary();

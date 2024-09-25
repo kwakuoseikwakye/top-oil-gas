@@ -148,6 +148,10 @@ class AuthService
                   return apiErrorResponse('Unauthorized access');
             }
 
+            if ($user->verified === false) {
+                  return apiErrorResponse('User not verified');
+            }
+
 
             $token = $user->createToken('accessToken')->plainTextToken;
             User::where("phone", $data['phone'])->update([

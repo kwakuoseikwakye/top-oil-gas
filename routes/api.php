@@ -42,6 +42,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/v2', function () {
+    return response()->json([
+        'app_name' => 'TopOil APIGateway',
+        'api_version' => '2.0.0',
+    ]);
+});
+
 Route::prefix("v2")->group(function () {
     Route::post("login", [AuthController::class, "login"]);
     Route::post("signup", [AuthController::class, "signUp"]);
