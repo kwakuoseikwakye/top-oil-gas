@@ -7,19 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-class Customer extends Model
+class CylinderWeights extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = "customers";
+    protected $table = "cylinder_weights";
     protected $primaryKey = "id";
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ["id", "fname", "mname", "lname", "gender", "address", "region", "id_type", "id_no", "id_link", "longitude", "latitude", "picture"];
+    protected $fillable = ["id", "desc", "weight", "amount"];
     protected $with = ['orders'];
-    protected $hidden = ["updated_at", "deleted_at"];
+    protected $hidden = ["created_at","updated_at", "deleted_at"];
 
+    public function cylinders()
+    {
+        return $this->hasMany(Cylinder::class, 'weight_id', 'id');
+    }
 
     protected static function boot()
     {
@@ -29,10 +33,5 @@ class Customer extends Model
                 $model->id = (string) Str::uuid();  // Ensure UUID generation
             }
         });
-    }
-
-    public function orders()
-    {
-        return $this->hasMany(Orders::class, 'customer_id', 'id');
     }
 }

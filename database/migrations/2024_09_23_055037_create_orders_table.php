@@ -17,7 +17,7 @@ class CreateOrdersTable extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('customer_id');
-            $table->uuid('cylinder_id');
+            // $table->uuid('cylinder_id');
             $table->uuid('location_id');
             $table->uuid('weight_id');
             $table->string('status', 100);
@@ -26,10 +26,6 @@ class CreateOrdersTable extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('cylinder_id')
-                ->references('id')
-                ->on('cylinders')
-                ->onUpdate('cascade');
             $table->foreign('customer_id')
                 ->references('id')
                 ->on('customers')

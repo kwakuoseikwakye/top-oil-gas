@@ -60,6 +60,7 @@ Route::prefix("v2")->group(function () {
 Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum'], function () {
     Route::prefix("users")->group(function () {
         Route::patch('/change-password', [UserController::class, 'changePassword']);
+        Route::post('/order', [UserController::class, 'createOrder']);
     });
 });
 
