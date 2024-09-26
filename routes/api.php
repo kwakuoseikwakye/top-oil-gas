@@ -57,7 +57,7 @@ Route::prefix("v2")->group(function () {
     Route::post('forgot-password', [AuthController::class, 'passwordReset']);
 });
 
-Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum'], function () {
+Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], function () {
     Route::prefix("users")->group(function () {
         Route::patch('/change-password', [UserController::class, 'changePassword']);
         Route::post('/order', [UserController::class, 'createOrder']);

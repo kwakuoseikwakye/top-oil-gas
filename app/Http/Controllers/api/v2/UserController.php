@@ -20,27 +20,18 @@ class UserController extends Controller
     public function changePassword()
     {
         $user = $this->request->user();
-        if (!$user) {
-            return apiErrorResponse("Unauthorised user", 400);
-        }
         return $this->userService->changePassword($this->request->all(), $user);
     }
 
     public function createOrder()
     {
         $user = $this->request->user();
-        if (!$user) {
-            return apiErrorResponse("Unauthorised user", 400);
-        }
         return $this->userService->createOrder($this->request->all(), $user);
     }
 
     public function addLocation()
     {
         $user = $this->request->user();
-        if (!$user) {
-            return apiErrorResponse("Unauthorised user", 400);
-        }
         return $this->userService->createLocation($this->request->all(), $user);
     }
 }
