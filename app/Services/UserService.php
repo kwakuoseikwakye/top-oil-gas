@@ -59,8 +59,8 @@ class UserService
             try {
                   $validator = Validator::make($request, [
                         "bulk_items.*.qty" => "required",
-                        "bulk_items.*.weight_id" => "required",
-                        "location_id" => "required",
+                        "bulk_items.*.weight_id" => "required|exists:cylinder_weights,id",
+                        "location_id" => "required|exists:customer_locations,id",
                   ]);
 
                   if ($validator->fails()) {
@@ -69,7 +69,7 @@ class UserService
 
                   DB::beginTransaction();
                   foreach ($request['bulk_items'] as $item) {
-                        Orders::create([
+                        $order = Orders::create([
                               "customer_id" => $user->customer_id,
                               "quantity" => $item['qty'],
                               "date_acquired" => date("Y-m-d H:i:s"),
@@ -81,7 +81,7 @@ class UserService
 
                   DB::commit();
 
-                  return apiSuccessResponse("Order successful");
+                  return apiSuccessResponse("Order successful", 201, $order);
             } catch (\Throwable $e) {
                   return apiErrorResponse("Internal error occured", 500, $e);
             }
@@ -107,9 +107,9 @@ class UserService
             }
 
             try {
-                  CustomerLocation::create($validator->validated() + ['customer_id' => $user->customer_id]);
+                  $location = CustomerLocation::create($validator->validated() + ['customer_id' => $user->customer_id]);
 
-                  return apiSuccessResponse("Location added successfully");
+                  return apiSuccessResponse("Location added successfully", 201, $location);
             } catch (\Exception $th) {
                   return apiErrorResponse("An internal error occured", 500, $th);
             }
@@ -153,7 +153,6 @@ class UserService
             }
       }
 
-
       public function setDefaultLocation(array $request, $id, $user)
       {
             $validator = Validator::make(
@@ -165,6 +164,10 @@ class UserService
 
             if ($validator->fails()) {
                   return apiErrorResponse("Adding default location failed. " . join(" ", $validator->errors()->all()), 422);
+            }
+
+            if ($request['default'] === false) {
+                  return apiErrorResponse("Adding default location failed. The default field accept only true values", 422);
             }
 
             try {
@@ -185,7 +188,7 @@ class UserService
                   $location->update($validator->validated());
                   CustomerLocation::where('id', $id)->update($validator->validated());
 
-                  return apiSuccessResponse("Default location set successfully");
+                  return apiSuccessResponse("Default location set successfully", 202, $location);
             } catch (\Exception $th) {
                   return apiErrorResponse("An internal error occured", 500, $th);
             }
