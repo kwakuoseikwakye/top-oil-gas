@@ -193,4 +193,25 @@ class UserService
                   return apiErrorResponse("An internal error occured", 500, $th);
             }
       }
+
+      public function deleteLocation($location_id, $user)
+      {
+            $location = CustomerLocation::find($location_id);
+
+            if (!$location) {
+                  return apiErrorResponse("Location not found.", 404);
+            }
+
+            if ($location->customer_id != $user->customer_id) {
+                  return apiErrorResponse("Unauthorized access to the location.", 403);
+            }
+
+            try {
+                  $location->delete();
+
+                  return apiSuccessResponse("Location deleted successfully");
+            } catch (\Exception $th) {
+                  return apiErrorResponse("An internal error occurred", 500, $th);
+            }
+      }
 }

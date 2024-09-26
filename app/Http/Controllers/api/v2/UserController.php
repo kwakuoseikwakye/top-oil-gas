@@ -54,4 +54,10 @@ class UserController extends Controller
         $location = CustomerLocation::where('customer_id', $user->customer_id)->get();
         return apiSuccessResponse('Request Successful', 200, $location);
     }
+
+    public function deleteLocation($id)
+    {
+        $user = $this->request->user();
+        return $this->userService->deleteLocation($id, $user);
+    }
 }

@@ -66,6 +66,7 @@ Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], fun
             Route::post('/', [UserController::class, 'addLocation']);
             Route::get('/', [UserController::class, 'getLocation']);
             Route::patch('/{id}', [UserController::class, 'updateLocation']);
+            Route::delete('/{id}', [UserController::class, 'deleteLocation']);
             Route::patch('/set-default/{id}', [UserController::class, 'setDefaultLocation']);
         });
 
