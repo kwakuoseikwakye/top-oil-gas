@@ -17,7 +17,7 @@ class Customer extends Model
     protected $keyType = 'string';
 
     protected $fillable = ["id", "fname", "mname", "lname", "gender", "address", "region", "id_type", "id_no", "id_link", "longitude", "latitude", "picture"];
-    protected $with = ['orders'];
+    protected $with = ['orders','locations'];
     protected $hidden = ["updated_at", "deleted_at"];
 
 
@@ -34,5 +34,10 @@ class Customer extends Model
     public function orders()
     {
         return $this->hasMany(Orders::class, 'customer_id', 'id');
+    }
+
+    public function locations()
+    {
+        return $this->hasMany(CustomerLocation::class, 'customer_id', 'id');
     }
 }

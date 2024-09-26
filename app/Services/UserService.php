@@ -114,4 +114,41 @@ class UserService
                   return apiErrorResponse("An internal error occured", 500, $th);
             }
       }
+
+      public function setDefaultLocation(array $request, $id, $user)
+      {
+            $validator = Validator::make(
+                  $request,
+                  [
+                        "default" => "required|boolean",
+                  ]
+            );
+
+            if ($validator->fails()) {
+                  return apiErrorResponse("Adding default location failed. " . join(" ", $validator->errors()->all()), 422);
+            }
+
+            try {
+                  $location = CustomerLocation::find($id);
+
+                  if (!$location) {
+                        return apiErrorResponse("Location not found.", 404);
+                  }
+
+                  $customerId = $user->customer_id;
+
+                  if ($request['default'] === true) {
+                        CustomerLocation::where('customer_id', $customerId)
+                              ->where('default', true)
+                              ->update(['default' => false]);
+                  }
+
+                  $location->update($validator->validated());
+                  CustomerLocation::where('id', $id)->update($validator->validated());
+
+                  return apiSuccessResponse("Default location set successfully");
+            } catch (\Exception $th) {
+                  return apiErrorResponse("An internal error occured", 500, $th);
+            }
+      }
 }

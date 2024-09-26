@@ -20,6 +20,8 @@ class CustomerLocation extends Model
         "longitude", "latitude", "default", "address",
     ];
 
+    protected $hidden = ["updated_at", "deleted_at"];
+
     protected static function boot()
     {
         parent::boot();
