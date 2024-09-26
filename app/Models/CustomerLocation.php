@@ -4,22 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 class CustomerLocation extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $table = "tblcustomer_location";
+    protected $table = "customer_locations";
     protected $primaryKey = "id";
     public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
-        "name", "custno", "phone1", "phone2", "address_info",
-        "long", "lat", "default", "cylcode",
+        "name", "customer_id", "phone1", "phone2", "additional_info",
+        "longitude", "latitude", "default", "address",
     ];
 
-    public function cylinders()
+    protected $hidden = ["updated_at", "deleted_at"];
+
+    protected static function boot()
     {
-        return $this->hasMany(Cylinder::class, 'location_id');
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();  // Ensure UUID generation
+            }
+        });
     }
 }
