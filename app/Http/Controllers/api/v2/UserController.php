@@ -36,6 +36,12 @@ class UserController extends Controller
         return $this->userService->createLocation($this->request->all(), $user);
     }
 
+    public function updateLocation($id)
+    {
+        $user = $this->request->user();
+        return $this->userService->updateLocation($this->request->all(), $id, $user);
+    }
+
     public function setDefaultLocation($id)
     {
         $user = $this->request->user();

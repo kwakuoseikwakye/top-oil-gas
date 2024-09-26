@@ -115,6 +115,45 @@ class UserService
             }
       }
 
+      public function updateLocation(array $request, $location_id, $user)
+      {
+            $validator = Validator::make(
+                  $request,
+                  [
+                        "name" => "nullable",
+                        "phone1" => "nullable|min:10",
+                        "address" => "nullable",
+                        "phone2" => "nullable",
+                        "longitude" => "nullable",
+                        "latitude" => "nullable",
+                        "additional_info" => "nullable",
+                  ]
+            );
+
+            if ($validator->fails()) {
+                  return apiErrorResponse("Updating location failed. " . join(" ", $validator->errors()->all()), 422);
+            }
+
+            $location = CustomerLocation::find($location_id);
+
+            if (!$location) {
+                  return apiErrorResponse("Location not found.", 404);
+            }
+
+            if ($location->customer_id != $user->customer_id) {
+                  return apiErrorResponse("Unauthorized access to the location.", 403);
+            }
+
+            try {
+                  $location->update($validator->validated());
+
+                  return apiSuccessResponse("Location updated successfully", 202, $location);
+            } catch (\Exception $th) {
+                  return apiErrorResponse("An internal error occurred", 500, $th);
+            }
+      }
+
+
       public function setDefaultLocation(array $request, $id, $user)
       {
             $validator = Validator::make(
