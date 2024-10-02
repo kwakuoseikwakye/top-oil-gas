@@ -17,13 +17,9 @@ class CylinderWeights extends Model
     protected $keyType = 'string';
 
     protected $fillable = ["id", "desc", "weight", "amount"];
-    protected $with = ['orders'];
+    // protected $with = ['orders'];
     protected $hidden = ["created_at","updated_at", "deleted_at"];
 
-    public function cylinders()
-    {
-        return $this->hasMany(Cylinder::class, 'weight_id', 'id');
-    }
 
     protected static function boot()
     {

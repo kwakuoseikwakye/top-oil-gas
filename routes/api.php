@@ -13,6 +13,7 @@ use App\Http\Controllers\api\v1\EmployeeController as MobileEmployeeController;
 use App\Http\Controllers\api\v1\PaymentController as V1PaymentController;
 use App\Http\Controllers\api\v1\WarehouseController as MobileWarehouseController;
 use App\Http\Controllers\api\v2\AuthController;
+use App\Http\Controllers\api\v2\CylinderController as V2CylinderController;
 use App\Http\Controllers\api\v2\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
@@ -55,6 +56,10 @@ Route::prefix("v2")->group(function () {
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('forgot-password', [AuthController::class, 'passwordReset']);
+
+    Route::prefix("cylinders")->group(function () {
+        Route::get('/weight', [V2CylinderController::class, 'getWeight']);
+    });
 });
 
 Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], function () {
@@ -69,8 +74,9 @@ Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], fun
             Route::delete('/{id}', [UserController::class, 'deleteLocation']);
             Route::patch('/set-default/{id}', [UserController::class, 'setDefaultLocation']);
         });
-
+        
     });
+
 });
 
 /**
