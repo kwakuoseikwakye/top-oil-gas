@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class RemoveCustomerIdFromOrdersTable extends Migration
+class AddColumnsToOrders extends Migration
 {
     /**
      * Run the migrations.
@@ -12,9 +12,10 @@ class RemoveCustomerIdFromOrdersTable extends Migration
      * @return void
      */
     public function up()
-    { 
+    {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('customer_id');
+            $table->string('pickup_location_id')->nullable();
+            $table->dateTime('schedule_date_time')->nullable();
         });
     }
 
@@ -26,7 +27,7 @@ class RemoveCustomerIdFromOrdersTable extends Migration
     public function down()
     {
         Schema::table('orders', function (Blueprint $table) {
-            //
+            $table->dropColumn(['pickup_location_id', 'schedule_date_time']);
         });
     }
 }

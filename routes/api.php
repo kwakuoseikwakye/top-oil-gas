@@ -15,6 +15,7 @@ use App\Http\Controllers\api\v1\WarehouseController as MobileWarehouseController
 use App\Http\Controllers\api\v2\AuthController;
 use App\Http\Controllers\api\v2\CylinderController as V2CylinderController;
 use App\Http\Controllers\api\v2\UserController;
+use App\Http\Controllers\api\v2\WarehouseController as V2WarehouseController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CylinderController;
 use App\Http\Controllers\DashboardController;
@@ -57,6 +58,8 @@ Route::prefix("v2")->group(function () {
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('forgot-password', [AuthController::class, 'passwordReset']);
 
+    Route::get('/pickup-locations', [V2WarehouseController::class, 'getPickupLocations']);
+
     Route::prefix("cylinders")->group(function () {
         Route::get('/weight', [V2CylinderController::class, 'getWeight']);
     });
@@ -73,6 +76,11 @@ Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], fun
             Route::patch('/{id}', [UserController::class, 'updateLocation']);
             Route::delete('/{id}', [UserController::class, 'deleteLocation']);
             Route::patch('/set-default/{id}', [UserController::class, 'setDefaultLocation']);
+        });
+
+        Route::prefix("upload")->group(function () {
+            Route::post('/file', [UserController::class, 'uploadFile']);
+
         });
         
     });

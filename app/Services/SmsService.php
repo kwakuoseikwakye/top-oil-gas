@@ -21,7 +21,7 @@ class SmsService
             $otpCode = $this->otpService->generateOtp();
             Log::info('otp code for' . $phone . ' => '.$otpCode);
             $this->otpService->storeOtp($phone, $otpCode);
-            $message = "Your verification code is " . $otpCode;
+            $message = "Your registration code is " . $otpCode;
             return $this->sms->send($phone, $message);
       }
 

@@ -60,4 +60,10 @@ class UserController extends Controller
         $user = $this->request->user();
         return $this->userService->deleteLocation($id, $user);
     }
+
+    public function uploadFile()
+    {
+        $user = $this->request->user();
+        return $this->userService->uploadFile($this->request->all(), $user);
+    }
 }

@@ -59,13 +59,13 @@ class AuthService
             try {
                   DB::beginTransaction();
 
-                  $filePath = $data['id_link']->store('images', 'public');
+                  // $filePath = $data['id_link']->store('images', 'public');
                   $customer = Customer::create([
                         "fname" => $data['fname'],
                         "lname" => $data['lname'],
-                        "id_type" => $data['id_type'] ?? null,
-                        "id_no" => $data['id_no'] ?? null,
-                        "id_link" => $data['id_link'] ? $filePath : null,
+                        // "id_type" => $data['id_type'] ?? null,
+                        // "id_no" => $data['id_no'] ?? null,
+                        // "id_link" => $data['id_link'] ? $filePath : null,
                   ]);
 
                   User::create([

@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\Status;
 use App\Models\CustomerLocation;
+use App\Models\Location;
 use App\Models\Orders;
+use App\Models\Pickup;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -60,26 +62,55 @@ class UserService
                   $validator = Validator::make($request, [
                         "bulk_items.*.qty" => "required",
                         "bulk_items.*.weight_id" => "required|exists:cylinder_weights,id",
-                        "location_id" => "required|exists:customer_locations,id",
+                        "delivery_type" => "required|in:delivery,pickup",
+                        "location_id" => "required_if:delivery_type,delivery",
+                        "pickup_location_id" => "required_if:delivery_type,pickup",
+                        "schedule_date_time" => "nullable|date|date_format:Y-m-d H:i:s",
+                  ], [
+                        "location_id.exists" => "Location does not exist"
                   ]);
 
                   if ($validator->fails()) {
                         return apiErrorResponse("Failed to add order(s). " . join(". ", $validator->errors()->all()), 422);
                   }
 
-                  DB::beginTransaction();
+                  if (!empty($request['schedule_date_time']) && empty($request['pickup_location_id'])) {
+                        return apiErrorResponse('For scheduled order pickup location is required', 422);
+                  }
+
+                  if ($request['delivery_type'] == 'pickup') {
+                        $pickup = Pickup::where('id', $request['pickup_location_id'])->exists();
+                        if (!$pickup) {
+                              return apiErrorResponse('The selected pickup location id is invalid.', 422);
+                        }
+                  }
+
+                  if ($request['delivery_type'] == 'delivery') {
+                        $location = CustomerLocation::where('id', $request['location_id'])->exists();
+                        if (!$location) {
+                              return apiErrorResponse('The selected location id is invalid.', 422);
+                        }
+                  }
+
+                  if (!empty($request['pickup_location_id']) && !empty($request['location_id'])) {
+                        return apiErrorResponse('Item can only be delivered to one location', 422);
+                  }
+
+                  // DB::beginTransaction();
                   foreach ($request['bulk_items'] as $item) {
                         $order = Orders::create([
                               "customer_id" => $user->customer_id,
                               "quantity" => $item['qty'],
                               "date_acquired" => date("Y-m-d H:i:s"),
                               "location_id" => $request['location_id'],
+                              "pickup_location_id" => $request['pickup_location_id'],
+                              "schedule_date_time" => $request['schedule_date_time'],
                               "weight_id" => $item['weight_id'],
                               "status" => Status::PENDING_PAYMENT
                         ]);
                   }
 
-                  DB::commit();
+                  // DB::commit();
 
                   return apiSuccessResponse("Order successful", 201, $order);
             } catch (\Throwable $e) {
@@ -212,6 +243,32 @@ class UserService
                   return apiSuccessResponse("Location deleted successfully");
             } catch (\Exception $th) {
                   return apiErrorResponse("An internal error occurred", 500, $th);
+            }
+      }
+
+      public function uploadFile(array $data, $user)
+      {
+            $validator = Validator::make($data, [
+                  "id_type" => "required",
+                  "id_no" => "required",
+                  "id_link" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                  return apiErrorResponse("Uploading file failed. " . join(". ", $validator->errors()->all()), 422);
+            }
+
+            try {
+                  $filePath = $data['id_link']->store('images', 'public');
+                  Customer::where('id', $user->customer_id)->update([
+                        "id_type" => $data['id_type'] ?? null,
+                        "id_no" => $data['id_no'] ?? null,
+                        "id_link" => $data['id_link'] ? $filePath : null,
+                  ]);
+
+                  return apiSuccessResponse('File uploaded successfully');
+            } catch (\Throwable $e) {
+                  return apiErrorResponse('Internal error occurred', 500, $e);
             }
       }
 }

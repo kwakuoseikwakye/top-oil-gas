@@ -16,9 +16,11 @@ class Orders extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired"];
+    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired", "pickup_location_id", "schedule_date_time"];
     protected $hidden = ["created_at", "updated_at", "deleted_at"];
-    
+
+    protected $with = ['cylinder_weight','pickup_location','location'];
+
     protected static function boot()
     {
         parent::boot();
@@ -27,5 +29,20 @@ class Orders extends Model
                 $model->id = (string) Str::uuid();  // Ensure UUID generation
             }
         });
+    }
+
+    public function cylinder_weight()
+    {
+        return $this->hasMany(CylinderWeights::class, 'id', 'weight_id');
+    }
+
+    public function pickup_location()
+    {
+        return $this->hasMany(Pickup::class, 'id', 'pickup_location_id');
+    }
+
+    public function location()
+    {
+        return $this->hasMany(CustomerLocation::class, 'id', 'location_id');
     }
 }
