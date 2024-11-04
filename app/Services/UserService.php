@@ -65,7 +65,7 @@ class UserService
                         "delivery_type" => "required|in:delivery,pickup",
                         "location_id" => "required_if:delivery_type,delivery",
                         "pickup_location_id" => "required_if:delivery_type,pickup",
-                        "schedule_date_time" => "nullable|date|date_format:Y-m-d H:i:s",
+                        "schedule_date_time" => "nullable",
                   ], [
                         "location_id.exists" => "Location does not exist"
                   ]);
@@ -96,10 +96,13 @@ class UserService
                         return apiErrorResponse('Item can only be delivered to one location', 422);
                   }
 
+                  $orderNumber = 'ord_' . substr(hash('sha256', uniqid('', true)), 0, 24);
+
                   // DB::beginTransaction();
                   foreach ($request['bulk_items'] as $item) {
                         $order = Orders::create([
                               "customer_id" => $user->customer_id,
+                              "order_number" => $orderNumber,
                               "quantity" => $item['qty'],
                               "date_acquired" => date("Y-m-d H:i:s"),
                               "location_id" => $request['location_id'],
@@ -111,8 +114,11 @@ class UserService
                   }
 
                   // DB::commit();
+                  $data = [
+                        "order_number" => $order->order_number,
+                  ];
 
-                  return apiSuccessResponse("Order successful", 201, $order);
+                  return apiSuccessResponse("Order successful", 201, $data);
             } catch (\Throwable $e) {
                   return apiErrorResponse("Internal error occured", 500, $e);
             }

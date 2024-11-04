@@ -11,12 +11,15 @@ class Orders extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const SUCCESS = 'success';
+    const CANCELLED = 'canceled';
+
     protected $table = "orders";
     protected $primaryKey = "id";
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired", "pickup_location_id", "schedule_date_time"];
+    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired", "pickup_location_id", "schedule_date_time","order_number"];
     protected $hidden = ["created_at", "updated_at", "deleted_at"];
 
     protected $with = ['cylinder_weight','pickup_location','location'];

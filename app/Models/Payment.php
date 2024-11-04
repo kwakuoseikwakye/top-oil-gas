@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
-    use HasFactory;
-    const CREATED_AT = "createdate";
-    const UPDATED_AT = "modifydate";
+    use HasFactory, SoftDeletes;
 
-    protected $table = "tblpayment";
-    protected $primaryKey = "transid";
+    protected $table = "payments";
+    protected $primaryKey = "id";
     public $incrementing = false;
     protected $keyType = "string";
 
@@ -21,14 +21,30 @@ class Payment extends Model
     const PENDING = 'pending';
 
     protected $fillable = [
-        "transid", "order_id", "payment_mode", "transaction_id", 
-         "status", "amount_due", "amount_paid", "balance",
-         "deleted", "createdate",
-        "createuser", "modifydate", "modifyuser",
+        "id",
+        "order_number",
+        "payment_mode",
+        "transaction_id",
+        "status",
+        "customer_id",
+        "amount_paid",
+        "created_at",
+        "updated_at",
+        "deleted_at",
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();  // Ensure UUID generation
+            }
+        });
+    }
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class, "custno", "custno");
+        return $this->belongsTo(Customer::class, "customer_id", "customer_id");
     }
 }

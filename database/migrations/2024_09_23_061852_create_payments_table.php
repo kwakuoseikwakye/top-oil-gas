@@ -17,7 +17,7 @@ class CreatePaymentsTable extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('customer_id');
-            $table->uuid('order_id');
+            $table->string('order_number',100);
             $table->string('payment_mode', 50);
             $table->string('transaction_id', 50);
             $table->string('status', 100);
@@ -25,10 +25,6 @@ class CreatePaymentsTable extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('order_id')
-                ->references('id')
-                ->on('orders')
-                ->onUpdate('cascade');
             $table->foreign('customer_id')
                 ->references('id')
                 ->on('customers')
