@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\v2;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerLocation;
+use App\Models\Orders;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
@@ -65,5 +66,12 @@ class UserController extends Controller
     {
         $user = $this->request->user();
         return $this->userService->uploadFile($this->request->all(), $user);
+    }
+
+    public function getOrderHistory()
+    {
+        $user = $this->request->user();
+        $orders = Orders::with(['cylinder_weight', 'pickup_location', 'location'])->where('customer_id', $user->customer_id)->get();
+        return apiSuccessResponse('Request Successful', 200, $orders);
     }
 }

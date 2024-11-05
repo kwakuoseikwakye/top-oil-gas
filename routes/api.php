@@ -69,7 +69,12 @@ Route::prefix("v2")->group(function () {
 Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], function () {
     Route::prefix("users")->group(function () {
         Route::patch('/change-password', [UserController::class, 'changePassword']);
-        Route::post('/order', [UserController::class, 'createOrder']);
+
+        Route::prefix("order")->group(function () {
+            Route::post('/', [UserController::class, 'createOrder']);
+            Route::get('/history', [UserController::class, 'getOrderHistory']);
+
+        });
 
         Route::prefix("location")->group(function () {
             Route::post('/', [UserController::class, 'addLocation']);

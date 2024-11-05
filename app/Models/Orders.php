@@ -36,16 +36,16 @@ class Orders extends Model
 
     public function cylinder_weight()
     {
-        return $this->hasMany(CylinderWeights::class, 'id', 'weight_id');
+        return $this->belongsTo(CylinderWeights::class, 'weight_id');
     }
 
     public function pickup_location()
     {
-        return $this->hasMany(Pickup::class, 'id', 'pickup_location_id');
+        return $this->belongsTo(Pickup::class, 'pickup_location_id');
     }
 
     public function location()
     {
-        return $this->hasMany(CustomerLocation::class, 'id', 'location_id');
+        return $this->belongsTo(CustomerLocation::class, 'location_id');
     }
 }
