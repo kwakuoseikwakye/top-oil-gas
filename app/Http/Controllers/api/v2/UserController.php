@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\v2;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerLocation;
+use App\Models\Dispatch;
 use App\Models\Orders;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -73,5 +74,12 @@ class UserController extends Controller
         $user = $this->request->user();
         $orders = Orders::with(['cylinder_weight', 'pickup_location', 'location'])->where('customer_id', $user->customer_id)->get();
         return apiSuccessResponse('Request Successful', 200, $orders);
+    }
+
+    public function getDispatch($orderNumber)
+    {
+        $user = $this->request->user();
+        $dispatch = Dispatch::with(['customer_location', 'pickup_location'])->where('order_number', $orderNumber)->get();
+        return apiSuccessResponse('Request Successful', 200, $dispatch);
     }
 }

@@ -33,6 +33,8 @@ class Dispatch extends Model
         "pickup_location_id",
     ];
 
+    protected $with = ['customer_location','pickup_location'];
+    
     protected static function boot()
     {
         parent::boot();
@@ -43,8 +45,13 @@ class Dispatch extends Model
         });
     }
 
-    public function cylinder()
+    public function customer_location()
     {
-        return $this->belongsTo(Cylinder::class, "cylcode", "cylcode");
+        return $this->belongsTo(CustomerLocation::class, "location_id");
+    }
+
+    public function pickup_location()
+    {
+        return $this->belongsTo(Pickup::class, "pickup_location_id");
     }
 }

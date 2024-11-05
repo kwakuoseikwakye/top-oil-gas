@@ -69,6 +69,7 @@ Route::prefix("v2")->group(function () {
 Route::group(['prefix' => 'v2', 'middleware' => 'auth:sanctum','auth.user'], function () {
     Route::prefix("users")->group(function () {
         Route::patch('/change-password', [UserController::class, 'changePassword']);
+        Route::get('/dispatch/{orderNumber}', [UserController::class, 'getDispatch']);
 
         Route::prefix("order")->group(function () {
             Route::post('/', [UserController::class, 'createOrder']);
