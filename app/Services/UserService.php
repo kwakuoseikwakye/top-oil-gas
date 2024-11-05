@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\Status;
 use App\Models\CustomerLocation;
+use App\Models\Dispatch;
 use App\Models\Location;
 use App\Models\Orders;
 use App\Models\Pickup;
@@ -98,7 +99,7 @@ class UserService
 
                   $orderNumber = 'ord_' . substr(hash('sha256', uniqid('', true)), 0, 24);
 
-                  // DB::beginTransaction();
+                  DB::beginTransaction();
                   foreach ($request['bulk_items'] as $item) {
                         $order = Orders::create([
                               "customer_id" => $user->customer_id,
@@ -113,13 +114,22 @@ class UserService
                         ]);
                   }
 
-                  // DB::commit();
+                  Dispatch::create([
+                        "customer_id" => $user->customer_id,
+                        "order_number" => $orderNumber,
+                        "status" => Dispatch::PENDING,
+                        "location_id" => $request['location_id'],
+                        "pickup_location_id" => $request['pickup_location_id'],
+                  ]);
+
+                  DB::commit();
                   $data = [
                         "order_number" => $order->order_number,
                   ];
 
                   return apiSuccessResponse("Order successful", 201, $data);
             } catch (\Throwable $e) {
+                  DB::rollBack();
                   return apiErrorResponse("Internal error occured", 500, $e);
             }
       }

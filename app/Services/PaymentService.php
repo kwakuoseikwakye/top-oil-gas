@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CylinderWeights;
+use App\Models\Dispatch;
 use App\Models\Orders;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
@@ -125,8 +126,9 @@ class PaymentService
 
                         return apiErrorResponse('Invalid transaction id');
                   }
+                  
                   Orders::where('order_number', $payment->order_number)->update(['status' => Orders::SUCCESS]);
-                  // Dispatch::where('order_id', $payment->order_id)->update(['status' => Dispatch::EN_ROUTE, 'modifydate' => date('Y-m-d H:i:s')]);
+                  Dispatch::where('order_number', $payment->order_number)->update(['status' => Dispatch::PENDING_ASSIGNMENT]);
 
                   DB::commit();
 
