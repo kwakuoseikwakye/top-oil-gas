@@ -20,7 +20,7 @@
                                     <i class="fas fa-users"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-booking">{{$customers}}</h3>
+                                    <h3 id="today-booking">{{2}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
@@ -44,7 +44,7 @@
                                     <i class="flaticon-internet"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-payment">{{$totalOrders}}</h3>
+                                    <h3 id="today-payment">{{2}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
@@ -67,7 +67,7 @@
                                     <i class="fa fa-user"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-payment">{{$cylinders}}</h3>
+                                    <h3 id="today-payment">{{2}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
@@ -94,7 +94,7 @@
                                     <i class="fas fa-bookmark"></i>
                                 </span>
                                 <span class="dash-count text-right">
-                                    <h3 id="today-booking">{{$staff}}</h3>
+                                    <h3 id="today-booking">{{2}}</h3>
                                 </span>
                             </div>
                             <div class="dash-widget">
@@ -118,7 +118,7 @@
                                     <i class="fa fa-credit-card"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-payment">{{$vendors}}</h3>
+                                    <h3 id="today-payment">{{2}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
@@ -142,7 +142,7 @@
                                     <i class="fa fa-credit-card"></i>
                                 </span>
                                 <div class="dash-count text-right">
-                                    <h3 id="today-payment">GHS {{$paid}}</h3>
+                                    <h3 id="today-payment">GHS {{2}}</h3>
                                 </div>
                             </div>
                             <div class="dash-widget">
@@ -248,8 +248,8 @@
     // student staff stat
     document.addEventListener("DOMContentLoaded", () => {
 
-        let student = "{{$petrocellCyl}}";
-        let staff = "{{$customerCyl}}";
+        let student = "{{50}}";
+        let staff = "{{50}}";
         let ptc = document.getElementById('cylinder-chart');
         var myDoughnutChart = new Chart(ptc, {
             type: 'doughnut',

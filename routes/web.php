@@ -25,11 +25,13 @@ Route::get('/verify-payment', [PaymentController::class, 'verifyPayment']);
 Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
 Route::get('dispatch', [RouteController::class, 'vendors'])->name('dispatch');
 Route::get('customers', [RouteController::class, 'customers'])->name('customers');
+Route::get('orders', [RouteController::class, 'cylinders'])->name('orders');
+Route::get('users', [RouteController::class, 'users'])->name('admin users');
+Route::get('payment', [RouteController::class, 'payment'])->name('payment');
+
+Route::get('warehouse', [RouteController::class, 'warehouse'])->name('warehouse');
 Route::get('employees', [RouteController::class, 'employees'])->name('employees');
 Route::get('logs', [RouteController::class, 'logs'])->name('logs');
-Route::get('users', [RouteController::class, 'users'])->name('admin users');
-Route::get('orders', [RouteController::class, 'cylinders'])->name('orders');
-Route::get('warehouse', [RouteController::class, 'warehouse'])->name('warehouse');
 Route::get('reports/customers', [RouteController::class, 'customersReport'])->name('reports');
 Route::get('reports/cylinders', [RouteController::class, 'cylinderReport'])->name('reports');
 Route::get('reports/sales', [RouteController::class, 'salesReport'])->name('reports');
@@ -37,7 +39,6 @@ Route::get('reports/employees', [RouteController::class, 'employeesReport'])->na
 Route::get('reports/operators', [RouteController::class, 'operatorsReport'])->name('reports');
 Route::get('reports/users', [RouteController::class, 'usersReport'])->name('reports');
 Route::get('reports/warehouse', [RouteController::class, 'warehouseReport'])->name('reports');
-Route::get('payment', [RouteController::class, 'payment'])->name('payment');
 Route::get('settings', [RouteController::class, 'settings'])->name('settings');
 Route::get('dispatch_returns', [RouteController::class, 'dispatchReturns']);
 

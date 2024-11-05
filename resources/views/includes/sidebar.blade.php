@@ -44,29 +44,23 @@
             <!--begin::Menu Nav-->
 
             <ul class="menu-nav">
-
-
-
                 @php
-                    $parent = DB::table('tblmodule')
+                    $parent = DB::table('modules')
                         ->select(
-                            'tblmodule_priv.modRead',
-                            'tblmodule_priv.userid',
-                            'tblmodule.hasChild',
-                            'tblmodule.isChild',
-                            'tblmodule.modName',
-                            'tblmodule.modLabel',
-                            'tblmodule.modURL',
-                            'tblmodule.modIcon',
-                            'tblmodule.modID',
+                            'privileges.modRead',
+                            'privileges.userid',
+                            'modules.modName',
+                            'modules.modLabel',
+                            'modules.modURL',
+                            'modules.modIcon',
+                            'modules.modID',
                         )
-                        ->join('tblmodule_priv', 'tblmodule.modID', 'tblmodule_priv.modID')
-                        ->where('tblmodule_priv.userid', Auth::user()->email)
-                        ->where('tblmodule_priv.modRead', '1')
-                        ->where('tblmodule.modStatus', '1')
-                        ->where('tblmodule.isChild', '0')
-                        ->orderBy('tblmodule.arrange', 'ASC')
-                        ->orderBy('tblmodule.id', 'ASC')
+                        ->join('privileges', 'modules.modID', 'privileges.modID')
+                        ->where('privileges.userid', Auth::user()->email)
+                        ->where('privileges.modRead', '1')
+                        ->where('modules.modStatus', '1')
+                        ->orderBy('modules.arrange', 'ASC')
+                        ->orderBy('modules.id', 'ASC')
                         ->get();
                     $parentMods = ['parent' => $parent];
                 @endphp

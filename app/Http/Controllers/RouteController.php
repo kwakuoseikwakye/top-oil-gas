@@ -37,84 +37,26 @@ class RouteController extends Controller
 
     public function dashboard()
     {
-        if (strtolower(Auth::user()->usertype) === "admin") {
-            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
-                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
-            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
-            $paid = DB::table("tblpayment")->selectRaw("sum(amount_paid) AS total")
-                ->where("deleted", 0)->first();
-            $vendors = DB::table("tblvendor")->where("deleted", 0)->get();
-            $petrocellCyl = DB::table("tblcylinder")->where("deleted", 0)
-                ->where("owner", "Petrocell")->count();
+        // if (strtolower(Auth::user()->usertype) === "admin") {
+            // $customerWeekly = DB::table("customers")->where("deleted", 0)
+            //     ->whereDate('createdate', Carbon::now()->subDays(7))->count();
+            // $customers = DB::table("customers")->count();
+            // $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
+            // $staff = DB::table("tblstaff")->where("deleted", 0)->count();
+            // $cylinders = DB::table("cylinders")->where("deleted", 0)->count();
+            // $paid = DB::table("payments")->selectRaw("sum(amount_paid) AS total")
+            //     ->where("deleted", 0)->first();
+            // $vendors = DB::table("tblvendor")->where("deleted", 0)->get();
+            // $petrocellCyl = DB::table("cylinders")->where("deleted", 0)
+            //     ->where("owner", "Petrocell")->count();
 
-            $customerCyl = DB::table("tblcylinder")->where("deleted", 0)
-                ->where("owner", "Customer")->count();
-            $totalOrders = CustomerCylinder::distinct('order_id')->count();
+            // $customerCyl = DB::table("tblcylinder")->where("deleted", 0)
+            //     ->where("owner", "Customer")->count();
+            // $totalOrders = CustomerCylinder::distinct('order_id')->count();
             // $cylinders 
             return view('main_dashboard', [
-                "totalOrders" => $totalOrders,
-                "cus" => $customerWeekly,
-                "customers" => $customers,
-                "paid" => $paid->total,
-                "vendors" => $vendor,
-                "vends" => $vendors,
-                "staff" => $staff,
-                "cylinders" => $cylinders,
-                "customerCyl" => $customerCyl,
-                "petrocellCyl" => $petrocellCyl,
             ]);
-        }
-        if (strtolower(Auth::user()->usertype) === "vendor") {
-            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
-                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
-            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
-            // $cylinders 
-            return view('vendor_dashboard', [
-                "cus" => $customerWeekly,
-                "customers" => $customers,
-                "vendors" => $vendor,
-                "staff" => $staff,
-                "cylinders" => $cylinders,
-            ]);
-        }
-        if (strtolower(Auth::user()->usertype) === "warehouse") {
-            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
-                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
-            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
-            // $cylinders 
-            return view('vendor_dashboard', [
-                "cus" => $customerWeekly,
-                "customers" => $customers,
-                "vendors" => $vendor,
-                "staff" => $staff,
-                "cylinders" => $cylinders,
-            ]);
-        }
-        if (strtolower(Auth::user()->usertype) === "staff") {
-            $customerWeekly = DB::table("tblcustomer")->where("deleted", 0)
-                ->whereDate('createdate', Carbon::now()->subDays(7))->count();
-            $customers = DB::table("tblcustomer")->where("deleted", 0)->count();
-            $vendor = DB::table("tblvendor")->where("deleted", 0)->count();
-            $staff = DB::table("tblstaff")->where("deleted", 0)->count();
-            $cylinders = DB::table("tblcylinder")->where("deleted", 0)->count();
-            // $cylinders 
-            return view('vendor_dashboard', [
-                "cus" => $customerWeekly,
-                "customers" => $customers,
-                "vendors" => $vendor,
-                "staff" => $staff,
-                "cylinders" => $cylinders,
-            ]);
-        }
+        // }
     }
 
     public function vendors()
