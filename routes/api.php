@@ -285,7 +285,9 @@ Route::prefix("users")->group(function () {
 Route::resource("users", AdminUsersController::class);
 
 // Customers 
-Route::prefix("customer")->group(function () {
+Route::prefix("customers")->group(function () {
+    Route::get("/", [CustomerController::class, "index"]);
+    Route::post("/", [CustomerController::class, "store"]);
     Route::post("add_location", [CustomerController::class, "addLocation"]);
     Route::post("update", [CustomerController::class, "update"]);
     Route::get("trash", [CustomerController::class, "trash"]);
@@ -293,7 +295,6 @@ Route::prefix("customer")->group(function () {
     Route::post("restore", [CustomerController::class, "restore"]);
     Route::post("delete", [CustomerController::class, "delete"]);
 });
-Route::resource("customer", CustomerController::class);
 
 // Vendors 
 Route::prefix("vendor")->group(function () {

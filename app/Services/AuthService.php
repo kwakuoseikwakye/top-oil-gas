@@ -63,6 +63,7 @@ class AuthService
                   $customer = Customer::create([
                         "fname" => $data['fname'],
                         "lname" => $data['lname'],
+                        "phone" => $data['phone'],
                         // "id_type" => $data['id_type'] ?? null,
                         // "id_no" => $data['id_no'] ?? null,
                         // "id_link" => $data['id_link'] ? $filePath : null,

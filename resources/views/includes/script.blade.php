@@ -89,8 +89,3 @@
     $('.selectpicker').selectpicker();
 </script>
 @include('includes.change_password')
-{{-- @include('modules.dispatch')
-@include('modules.search')
-@include('modules.customer_cylinder')
-@include('modules.search_customer') --}}
-<!--end::Page Scripts-->

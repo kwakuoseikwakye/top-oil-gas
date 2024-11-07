@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CustomerLocation;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CustomerResource extends JsonResource
@@ -14,35 +15,26 @@ class CustomerResource extends JsonResource
      */
     public function toArray($request)
     {
-       return [
-            "transid" => $this->id,
+        $location = CustomerLocation::where('default', 1)->where('customer_id', $this->id)->first();
+        $address = $location->address ?? "n/a";
+        $name = $location->name ?? "n/a";
+        $phone = $location->phone1 ?? "n/a";
+        $info = $location->additional_info ?? "n/a";
+        return [
+            "id" => $this->id,
             "name" => "{$this->fname} {$this->lname}",
-            "title" => $this->title,
-            "code" => $this->custno,
             "phone" => $this->phone,
-            "email" => $this->email,
             "fname" => $this->fname,
             "mname" => $this->mname,
             "lname" => $this->lname,
-            "region" => $this->region,
-            "town" => $this->town,
-            "lname" => $this->lname,
-            "streetname" => $this->streetname,
-            "landmark" => $this->landmark,
             "idtype" => $this->id_type,
             "idno" => $this->id_no,
-            "gender" => $this->gender,
-            "gender_lower" => strtolower($this->gender),
-            "gps" => $this->gpsaddress,
-            "long" => $this->longitude,
-            "lat" => $this->latitude,
-            "idimage" => $this->idFileLink,
+            "idimage" => $this->id_link,
             "picture" => $this->picture,
-            "address" => $this->home_address,
-            "occupation" => $this->occupation,
-            "marital_status" => $this->marital_status,
-            "pob" => $this->pob,
-            "dob" => $this->dob,
+            "address" => "<b>Name</b> : {$name}\n
+            <b>Address</b> : {$address}\n
+            <b>Contact Phone</b> : {$phone}\n
+            <b>Additional Info.</b> : {$this->info}",
             "action" => "
             <div class='dropdown'>
                   <button

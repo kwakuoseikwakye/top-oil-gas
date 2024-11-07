@@ -76,10 +76,9 @@ class RouteController extends Controller
 
     public function customers()
     {
-        $cylinders = DB::table("tblcylinder")->get();
-        $customer = DB::table("tblcustomer")->get();
-        $size = DB::table("tblcylinder_size")->get();
-        $vendors = DB::table("tblvendor")->get();
+        $cylinders = DB::table("cylinders")->get();
+        $customer = DB::table("customers")->get();
+        $size = DB::table("cylinder_weights")->get();
         return view('modules.customer.index', [
             "cylinder" => $cylinders,
             "size" => $size,

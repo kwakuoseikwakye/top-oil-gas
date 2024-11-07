@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Stevebauman\Location\Facades\Location;
 use App\Arkesel\Arkesel as Sms;
+use App\Services\OtpService;
+use App\Services\SmsService;
 
 class CustomerController extends Controller
 {
@@ -26,27 +28,10 @@ class CustomerController extends Controller
     public function index()
     {
         return response()->json([
-            'data' => CustomerResource::collection(Customer::where("deleted", 0)
-                ->orderBy("createdate", "DESC")->get()),
+            'data' => CustomerResource::collection(Customer::all()),
         ]);
     }
 
-    public function trash()
-    {
-        return response()->json([
-            'data' => CustomerResource::collection(Customer::where("deleted", 1)
-                ->orderBy("createdate", "DESC")->get()),
-        ]);
-    }
-
-    public function report($dateFrom, $dateTo)
-    {
-        return response()->json([
-            'data' => CustomerResource::collection(Customer::where("deleted", 0)
-                ->whereBetween('createdate', [$dateFrom, $dateTo])
-                ->orderBy("createdate", "DESC")->get()),
-        ]);
-    }
 
     /**
      * Show the form for creating a new resource.
@@ -64,166 +49,80 @@ class CustomerController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, SmsService $sms)
     {
         try {
             $validator = Validator::make($request->all(), [
-                "firstName" => "required",
-                "lastName" => "required",
-                "phoneNumber" => "required|numeric|unique:tblcustomer,phone",
-                "idType" => "required",
-                "idNumber" => "required",
+                "fname" => "required",
+                "lname" => "required",
+                "phone" => "required|unique:users,phone",
+                "id_type" => "required",
+                "id_no" => "required",
             ], [
-                "firstName.required" => "No first name supplied",
-                "lastName.required" => "No last name supplied",
-
-                // Phone error messages
-                "phoneNumber.required" => "No phone number supplied",
-                "phoneNumber.numeric" => "Phone number supplied [{$request->phoneNumber}] must contain only numbers",
-                "phoneNumber.unique" => "Phone number already taken",
-
-                // Email error messages
-                // "email.email" => "The supplied email [{$request->email}] is not a valid email",
-                // "email.required" => "No email supplied",
-                // "email.unique" => "Email already taken",
-
-                // ID error messages
-                "idType.required" => "ID Type is required",
-                "idNumber.required" => "ID number is required",
-                // "idFileLink.required" => "Upload ID",
+                "fname.required" => "No first name supplied",
+                "lname.required" => "No last name supplied",
+                "phone.required" => "No phone number supplied",
+                "phone.unique" => "Phone number already taken",
+                "id_type.required" => "ID Type is required",
+                "id_no.required" => "ID number is required",
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    "ok" => false,
-                    "msg" => "Registration failed. " . join(". ", $validator->errors()->all()),
-                ]);
+                return apiErrorResponse("Registration failed. " . join(". ", $validator->errors()->all()));
             }
 
             DB::beginTransaction();
-            $transid = strtoupper(bin2hex(random_bytes(4)));
+
             $pass = uniqid();
-            DB::table("tbluser")->insert([
-                "transid" => $transid,
-                "userid" => 'CUS-' . $transid,
-                "fname" => $request->firstName,
-                "lname" => $request->lastName,
-                "username" => strtolower($transid),
+
+            $customer = Customer::create([
+                "fname" => strtoupper($request->fname),
+                "lname" => strtoupper($request->lname),
+                "id_type" => $request->id_type,
+                "id_no" => $request->id_no,
+                "agent_code" => $request->agent_code,
+            ]);
+            User::create([
+                'customer_id' => $customer->id,
+                "username" => "{$request->fname} {$request->lname}",
                 "usertype" => "customer",
                 "password" =>  Hash::make($pass),
-                "phone" => empty($request->phoneNumber) ? '' : $request->phoneNumber,
-                "email" => empty($request->email) ? '' : $request->email,
-                "picture" => $request->picture,
-                "deleted" =>  0,
-                "createdate" =>  date("Y-m-d H:i:s"),
-                "createuser" =>  $request->createuser,
-            ]);
-
-            DB::table('tblcustomer')->insert([
-                "custno" => 'CUS-' . $transid,
-                "title" => $request->title,
-                "fname" => strtoupper($request->firstName),
-                "lname" => strtoupper($request->lastName),
-                "mname" => strtoupper($request->middleName),
-                "dob" => $request->dateOfBirth,
-                "pob" => $request->placeOfBirth,
-                "marital_status" => $request->maritalStatus,
-                "occupation" => $request->occupation,
-                "home_address" => $request->homeAddress,
-                "region" => $request->region,
-                "town" => $request->town,
-                "streetname" => $request->streetName,
-                "landmark" => $request->landmark,
-                "gpsaddress" => $request->gpsaddress,
-                "phone" => $request->phoneNumber,
-                "email" => empty($request->email) ? '' : $request->email,
-                "id_type" => $request->idType,
-                "id_no" => $request->idNumber,
-                "id_link" => $request->idFileLink,
-                "gender" => strtoupper($request->gender),
-                "picture" => $request->picture,
-                "longitude" => $request->longitude,
-                "latitude" => $request->latitude,
-                "createdate" =>  date('Y-m-d H:i:s'),
-                "createuser" => $request->createuser,
-                "deleted" => 0,
+                "phone" => empty($request->phone) ? '' : $request->phone,
             ]);
 
             if (null != $request->hasFile('idimage')) {
 
                 $filePath = $request->file("idimage")->store("public/ids");
 
-                DB::table('tblcustomer')->where("phone", $request->phoneNumber)->update([
+                Customer::where("id", $customer->id)->update([
                     "id_link" => env("IMAGE_BASE_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
 
-            if (!empty($request->email)) {
-                $mods = DB::table("tblmodule")->get();
-
-                foreach ($mods as $mod) {
-                    DB::table("tblmodule_priv")->insert([
-                        "userid" => $request->email,
-                        "modRead" => "1",
-                        "modID" => $mod->modID,
-                        "createdate" => date("Y-m-d"),
-                        "createuser" => "admin",
-                    ]);
-                }
-            }
 
             if (null != $request->hasFile('image')) {
 
                 $filePath = $request->file("image")->store("public/avatars");
 
-                DB::table('tblcustomer')->where("transid", $transid)->update([
+                Customer::where("id", $customer->id)->update([
                     "picture" => env("IMAGE_BASE_URL") . "/" . str_replace("public", "storage", $filePath),
                 ]);
             }
 
-            $userIp = $request->ip();
-            $locationData = Location::get($userIp);
-            $transid1 = strtoupper(bin2hex(random_bytes(4)));
-
-            ModelsLog::insert([
-                "transid" => $transid1,
-                "username" => $request->createuser,
-                "module" => "Customer",
-                "action" => "Add",
-                "activity" => "Customer registered from Back Office with id CUS-{$transid} successfully",
-                "ipaddress" => $userIp,
-                "createuser" =>  $request->createuser,
-                "createdate" => gmdate("Y-m-d H:i:s"),
-                "longitude" => $locationData->longitude ?? $userIp,
-                "latitude" => $locationData->latitude ?? $userIp,
-            ]);
-
             DB::commit();
             $msg = <<<MSG
-            Hi {$request->firstName},
+            Hi {$request->fname},
             Thanks for registering with TOPOIL.
             Kindly use the following credentials to login
             into our mobile app. Your password is {$pass}
             MSG;
 
-            $sms = new Sms('TOP-OIL', env('ARKESEL_SMS_API_KEY'));
-            $sms->send($request->phoneNumber, $msg);
-            return response()->json([
-                "ok" => true,
-                "msg" => "Registration successful",
-            ]);
+            $sms->sendMessage($request->phone, $msg);
+
+            return apiSuccessResponse('Customer added successfully');
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error("An error occured during signup", [
-                "errMsg" => $e->getMessage(),
-                "trace" => $e->getTrace(),
-            ]);
-
-            return response()->json([
-                "ok" => false,
-                "msg" => "Request failed. An internal error occured",
-                "errMsg" => $e->getMessage(),
-            ]);
+            return apiErrorResponse('An error occurred adding customer', 500, $e);
         }
     }
 
@@ -564,45 +463,6 @@ class CustomerController extends Controller
                 "ok" => false,
                 "msg" => "Request failed. An internal error occured",
                 "errMsg" => $e->getMessage(),
-            ]);
-        }
-    }
-
-    public function import()
-    {
-        try {
-            DB::beginTransaction();
-            Excel::import(new CustomerImport, request()->file('file'));
-
-            // $barcodes = Customer::where("deleted",0)->get();
-
-            // foreach ($barcodes as $barcode) {
-            //     DB::table("tblcustomer_cylinder")->insert([
-            //         'transid' => bin2hex(random_bytes(4)),
-            //         'custno' => $barcode->custno,
-            //         'barcode' => $barcode->lname,
-            //         'cylcode' => $barcode->lname,
-            //         'status' => "1",
-            //         'createuser' => "admin",
-            //         'createdate' => date("Y-m-d H:i:s"),
-            //     ]);
-            // }
-
-
-
-            DB::commit();
-
-            return response()->json([
-                "ok" => true,
-                "msg" => "Upload successful",
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                "ok" => false,
-                "msg" => "There is an error in your excel file upload",
-                "error" => [
-                    "msg" => $th->__toString(),
-                ]
             ]);
         }
     }

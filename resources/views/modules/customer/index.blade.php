@@ -18,7 +18,7 @@
 
                         <!--begin::Button-->
                         <a data-toggle="modal" data-target="#add-customer-modal"
-                            class="btn btn-light-warning font-weight-bolder">
+                            class="btn btn-light-primary font-weight-bolder">
                             Add Customer</a>
                         {{-- <a data-toggle="modal" data-target="#file-modal"
                             class="btn btn-primary font-weight-bolder ml-1">
@@ -45,9 +45,9 @@
                                     id="customer-table">
                                     <thead>
                                         <tr>
-                                            <th>Code</th>
                                             <th>Name</th>
                                             <th>Phone</th>
+                                            <th>Address</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -66,115 +66,15 @@
     <!--end::Entry-->
 </div>
 @include('modules.customer.modals.add_customer')
-@include('modules.customer.modals.edit_customer')
+{{-- @include('modules.customer.modals.edit_customer')
 @include('modules.customer.modals.info')
 @include('modules.customer.modals.file_upload')
-@include('modules.customer.modals.add_location')
+@include('modules.customer.modals.add_location') --}}
+@push('js-scripts')
+        @vite(['resources/js/customers/index.js'])
+    @endpush
 <script>
-    var customerTable = $('#customer-table').DataTable({
-        dom: 'Bfrtip',
-        ajax: {
-            url: `${APP_URL}/api/customer`,
-            type: "GET"
-
-        },
-        ordering: false,
-        order: [],
-        processing: true,
-        // pageLength : 100,
-        columns: [{
-                data: "code"
-            },
-            {
-                data: "name"
-            },
-            // {
-            //     data: "gender"
-            // },
-            // {
-            //     data: "email"
-            // },
-            {
-                data: "phone"
-            },
-            {
-                data: "action"
-            },
-            // {
-            //     data: null,
-            //     defaultContent: `
-
-            //     <button type='button' data-row-transid='$this->transid'
-            //     rel='tooltip' class='btn btn-primary btn-sm view-btn'>
-            //         <i class='fas fa-eye'></i>
-            //     </button>
-
-            //     <button type='button' data-row-transid='$this->transid'
-            //     rel='tooltip' class='btn btn-success btn-sm edit-btn'>
-            //        <i class='fas fa-edit'></i>
-            //     </button>
-
-            //     <button type='button' data-row-transid='$this->transid'
-            //     rel='tooltip' class='btn btn-danger btn-sm delete-btn'>
-            //        <i class='fas fa-trash'></i>
-            //     </button>
-                
-            //     `
-            // },
-        ],
-        // "columnDefs": [{
-        //         "targets": [6],
-        //         "visible": false
-        //     },
-        // ],
-        responsive: true,
-        buttons: [{
-                extend: 'print',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4]
-                }
-            },
-            {
-                extend: 'copy',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4]
-                }
-            },
-            {
-                extend: 'excel',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4]
-                }
-            },
-            {
-                extend: 'pdf',
-                attr: {
-                    class: "btn btn-sm btn-secondary rounded-right"
-                },
-                exportOptions: {
-                    columns: [0, 1, 2, 3, 4]
-                }
-            },
-            {
-                text: "Refresh",
-                attr: {
-                    class: "ml-2 btn-warning btn btn-sm rounded"
-                },
-                action: function (e, dt, node, config) {
-                    dt.ajax.reload(false, null);
-                }
-            },
-        ]
-    });
+ 
 
     $("#customer-table").on("click", ".location-btn", function () {
         let data = customerTable.row($(this).parents('tr')).data();
