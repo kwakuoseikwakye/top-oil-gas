@@ -79,8 +79,6 @@ class AuthService
 
                   DB::commit();
 
-                  $this->smsService->sendOtp($data['phone']);
-
                   return apiSuccessResponse('Signup successful');
             } catch (\Throwable $e) {
                   DB::rollBack();
@@ -92,7 +90,7 @@ class AuthService
       {
             $validator = Validator::make($data, [
                   "phone" => "required|exists:users,phone",
-                  "otp" => "required|integer|min:6",
+                  "otp" => "required",
             ]);
 
             if ($validator->fails()) {
@@ -102,15 +100,19 @@ class AuthService
             $phone = $data['phone'];
             $otp = $data['otp'];
 
+            $user = User::where('phone', $phone)->first();
             $cachedOtp = $this->otpService->getOtp($phone);
 
             if ($cachedOtp && $cachedOtp == $otp) {
+                  if (now()->greaterThan($user->otp_expires_at)) {
+                        return apiErrorResponse('OTP has expired', 400);
+                  }
                   User::where('phone', $phone)->update([
                         'verified' => true,
                         'email_verified_at' => now()
                   ]);
                   $this->otpService->forgetOtp($phone);
-                  return apiSuccessResponse('OTP verification successful');
+                  return apiSuccessResponse('OTP verified successfully');
             }
 
             return apiErrorResponse('Invalid OTP', 400);

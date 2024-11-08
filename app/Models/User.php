@@ -22,7 +22,22 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $fillable = ['id', 'customer_id', 'username', 'last_login', 'email', 'phone', 'usertype', 'email_verified_at', 'password', 'backend_registered', 'verified', 'remember_token'];
+    protected $fillable = [
+        'id',
+        'customer_id',
+        'username',
+        'last_login',
+        'email',
+        'phone',
+        'usertype',
+        'email_verified_at',
+        'password',
+        'backend_registered',
+        'verified',
+        'remember_token',
+        'otp',
+        'otp_expires_at',
+    ];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -60,5 +75,4 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
-
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 class OtpService
@@ -11,18 +12,25 @@ class OtpService
         return rand(100000, 999999);
     }
 
-    public function storeOtp($phone, $otp, $duration = 600)
+    public function storeOtp($phone, $otp, $duration = 5)
     {
-        Cache::put('otp_' . $phone, $otp, $duration);
+        User::where('phone', $phone)->update([
+            'otp' => $otp,
+            'otp_expires_at' => now()->addMinutes($duration)
+        ]);
     }
 
     public function getOtp($phone)
     {
-        return Cache::get('otp_' . $phone);
+        $otp = User::where('phone', $phone)->first()->otp;
+        return $otp;
     }
 
     public function forgetOtp($phone)
     {
-        Cache::forget('otp_' . $phone);
+        User::where('phone', $phone)->update([
+            'otp' => null,
+            'otp_expires_at' => null
+        ]);
     }
 }
