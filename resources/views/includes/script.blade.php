@@ -68,6 +68,8 @@
 <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
 <script src="{{ asset('assets/js/pages/widgets.js') }}"></script>
 <script src="{{ asset('bootstrap-select.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('assets/datatables/dt.js') }}"></script>
+
 <script>
     // Initialize Bootstrap Select
     $('.selectpicker').selectpicker();

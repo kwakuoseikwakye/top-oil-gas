@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RouteController;
+use App\View\Components\CustomerComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +17,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [RouteController::class, 'dashboard'])->name('dashboard');
+    Route::get('/customers', [RouteController::class, 'customers'])->name('customers');;
 });
 
 require __DIR__.'/auth.php';

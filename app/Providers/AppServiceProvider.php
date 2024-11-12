@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\View\Components\CustomerComponent;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Blade::component('CustomerComponent', CustomerComponent::class);
     }
 }
