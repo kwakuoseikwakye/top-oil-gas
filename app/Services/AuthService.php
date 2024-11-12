@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\Status;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -59,14 +58,10 @@ class AuthService
             try {
                   DB::beginTransaction();
 
-                  // $filePath = $data['id_link']->store('images', 'public');
                   $customer = Customer::create([
                         "fname" => $data['fname'],
                         "lname" => $data['lname'],
                         "phone" => $data['phone'],
-                        // "id_type" => $data['id_type'] ?? null,
-                        // "id_no" => $data['id_no'] ?? null,
-                        // "id_link" => $data['id_link'] ? $filePath : null,
                   ]);
 
                   User::create([
