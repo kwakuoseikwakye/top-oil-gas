@@ -11,7 +11,7 @@ class Dispatch extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const PENDING = 'pending';
+    const PENDING = 'pending_payment';
     const PENDING_ASSIGNMENT = 'pending_assignment';
     const ASSIGNED = 'assigned';
     const EN_ROUTE = 'en route';

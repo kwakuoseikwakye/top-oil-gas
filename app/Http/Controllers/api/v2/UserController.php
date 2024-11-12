@@ -72,7 +72,7 @@ class UserController extends Controller
     public function getOrderHistory()
     {
         $user = $this->request->user();
-        $orders = Orders::with(['cylinder_weight', 'pickup_location', 'location'])->where('customer_id', $user->customer_id)->get();
+        $orders = Orders::with(['cylinder_weight', 'pickup_location', 'location','payment'])->where('customer_id', $user->customer_id)->get();
         return apiSuccessResponse('Request Successful', 200, $orders);
     }
 

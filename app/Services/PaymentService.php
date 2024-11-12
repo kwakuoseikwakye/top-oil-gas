@@ -115,18 +115,19 @@ class PaymentService
       {
             try {
 
-                  DB::beginTransaction();
-
+                  
                   $payment  = Payment::where('transaction_id', $transactionId)->first();
-
-                  Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
-
-                  if (!$payment) {
+                  
+                  
+                  if (empty($payment)) {
                         Orders::where('order_number', $payment->order_number)->update(['status' => Orders::CANCELLED]);
-
+                        
                         return apiErrorResponse('Invalid transaction id');
                   }
                   
+                  DB::beginTransaction();
+                  
+                  Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
                   Orders::where('order_number', $payment->order_number)->update(['status' => Orders::SUCCESS]);
                   Dispatch::where('order_number', $payment->order_number)->update(['status' => Dispatch::PENDING_ASSIGNMENT]);
 

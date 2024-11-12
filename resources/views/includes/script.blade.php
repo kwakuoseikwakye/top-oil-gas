@@ -1,9 +1,4 @@
 @section('script')
-    @stack('js-scripts')
-
-@show
-{{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script> --}}
-
 <!--begin::Global Config(global config for global JS scripts)-->
 <script>
     var KTAppSettings = {
@@ -71,21 +66,13 @@
 <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
 <script src="{{ asset('assets/plugins/custom/prismjs/prismjs.bundle.js') }}"></script>
 <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
-<!--end::Global Theme Bundle-->
-<!--begin::Page Vendors(used by this page)-->
-{{-- <script src="{{asset('assets/plugins/custom/fullcalendar/fullcalendar.bundle.js')}}"></script> --}}
-<!--end::Page Vendors-->
-<!--begin::Page Scripts(used by this page)-->
 <script src="{{ asset('assets/js/pages/widgets.js') }}"></script>
 <script src="{{ asset('bootstrap-select.min.js') }}"></script>
-<!-- select2 -->
-{{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0/dist/js/bootstrap-select.min.js"></script> --}}
-{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta/js/bootstrap-select.min.js" integrity="sha512-I0sRMhP0loaoXaytYuOHHU3pGmyQklf5irZZ8cSaIPi9ETq5qvfcDAiBJ4vqpaq8xeUe7ZVwYM5xqQlxYDK3Uw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
-{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/js/select2.min.js" integrity="sha512-9p/L4acAjbjIaaGXmZf0Q2bV42HetlCLbv8EP0z3rLbQED2TAFUlDvAezy7kumYqg5T8jHtDdlm1fgIsr5QzKg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
-{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js" integrity="sha512-bj8HE1pKwchoYNizhD57Vl6B9ExS25Hw21WxoQEzGapNNjLZ0+kgRMEn9KSCD+igbE9+/dJO7x6ZhLrdaQ5P3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
-{{-- <script scr="{{ asset('assets/select2.min.js') }}"></script> --}}
 <script>
     // Initialize Bootstrap Select
     $('.selectpicker').selectpicker();
 </script>
 @include('includes.change_password')
+
+@stack('js-scripts')
+@show

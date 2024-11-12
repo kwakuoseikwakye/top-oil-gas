@@ -19,10 +19,10 @@ class Orders extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired", "pickup_location_id", "schedule_date_time","order_number"];
+    protected $fillable = ["id", "customer_id", "location_id", "weight_id", "status", "quantity", "date_acquired", "pickup_location_id", "schedule_date_time", "order_number"];
     protected $hidden = ["created_at", "updated_at", "deleted_at"];
 
-    protected $with = ['cylinder_weight','pickup_location','location'];
+    protected $with = ['cylinder_weight', 'pickup_location', 'location', 'payment'];
 
     protected static function boot()
     {
@@ -47,5 +47,10 @@ class Orders extends Model
     public function location()
     {
         return $this->belongsTo(CustomerLocation::class, 'location_id');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'order_number', 'order_number');
     }
 }

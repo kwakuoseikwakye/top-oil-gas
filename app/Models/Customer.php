@@ -16,8 +16,8 @@ class Customer extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ["id", "fname", "mname", "lname", "gender", "address", "region", "id_type", "id_no", "id_link", "longitude", "latitude", "picture"];
-    protected $with = ['orders','locations'];
+    protected $fillable = ["id", "fname", "mname", "lname", "gender", "address", "region", "id_type", "id_no", "id_link", "id_link_back","longitude", "latitude", "picture"];
+    protected $with = ['orders', 'locations'];
     protected $hidden = ["updated_at", "deleted_at"];
 
 

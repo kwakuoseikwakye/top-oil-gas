@@ -267,7 +267,8 @@ class UserService
             $validator = Validator::make($data, [
                   "id_type" => "required",
                   "id_no" => "required",
-                  "id_link" => "required",
+                  "id_link_front" => "required",
+                  "id_link_back" => "required",
             ]);
 
             if ($validator->fails()) {
@@ -276,10 +277,12 @@ class UserService
 
             try {
                   $filePath = $data['id_link']->store('images', 'public');
+                  $filePathBack = $data['id_link_back']->store('images', 'public');
                   Customer::where('id', $user->customer_id)->update([
                         "id_type" => $data['id_type'] ?? null,
                         "id_no" => $data['id_no'] ?? null,
                         "id_link" => $data['id_link'] ? $filePath : null,
+                        "id_link_back" => $data['id_link_back'] ? $filePathBack : null,
                   ]);
 
                   return apiSuccessResponse('File uploaded successfully');

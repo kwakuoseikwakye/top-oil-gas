@@ -70,9 +70,7 @@
 @include('modules.customer.modals.info')
 @include('modules.customer.modals.file_upload')
 @include('modules.customer.modals.add_location') --}}
-@push('js-scripts')
-        @vite(['resources/js/customers/index.js'])
-    @endpush
+
 <script>
  
 
@@ -176,6 +174,8 @@
     });
 
 </script>
-
-
 @endsection
+
+@push('js-scripts')
+    @vite(['resources/js/customers/index.js'])
+@endpush
