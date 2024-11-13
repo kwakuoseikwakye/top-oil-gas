@@ -11,19 +11,25 @@ class Cylinder extends Model
     const CREATED_AT = "createdate";
     const UPDATED_AT = "modifydate";
 
-    protected $table = "tblcylinder";
+    protected $table = "cylinders";
     protected $primaryKey = "transid";
     public $incrementing = false;
     protected $keyType = "string";
 
     protected $fillable = [
-        "transid", "barcode", "owner", "cylcode", "size","notes",
-        "weight_id", "initial_amount", "images", "deleted", "createdate",
-        "createuser", "modifydate", "modifyuser","location_id"
+        "id",
+        "owner",
+        "code",
+        "size",
+        "weight_id",
+        "requested",
+        "image",
+        "location_id"
     ];
 
     protected $casts = [
-        'images' => 'array',
+        'image' => 'array',
+        'requested' => 'boolean',
     ];
 
     public function customers()
@@ -43,6 +49,6 @@ class Cylinder extends Model
 
     public function cylinderWeight()
     {
-        return $this->belongsTo(CylinderSize::class, 'weight_id','id');
+        return $this->belongsTo(CylinderSize::class, 'weight_id', 'id');
     }
 }

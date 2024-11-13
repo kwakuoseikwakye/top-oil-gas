@@ -4,6 +4,7 @@ use App\Http\Controllers\api\v2\AuthController;
 use App\Http\Controllers\api\v2\CylinderController;
 use App\Http\Controllers\api\v2\WarehouseController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,10 @@ Route::group(['prefix' => 'admin'], function () {
 
     Route::prefix("customers")->group(function () {
         Route::get('/', [CustomerController::class, 'index']);
+    });
+
+    Route::prefix("orders")->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
     });
 
 });

@@ -12,6 +12,7 @@ class Orders extends Model
     use HasFactory, SoftDeletes;
 
     const SUCCESS = 'success';
+    const PENDING = 'pending_payment';
     const CANCELLED = 'canceled';
 
     protected $table = "orders";
