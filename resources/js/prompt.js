@@ -9,12 +9,12 @@
  * @returns {void}
  */
 export const handlePrompt = (
-      formId,          // Form ID (e.g., 'add-customer-form')
-      modalId,         // Modal ID (e.g., 'add-customer-modal')
-      apiRoute,        // API endpoint (e.g., `${APP_URL}/api/customers`)
-      promptMessage,   // Confirmation message (e.g., 'Are you sure you want to add this customer')
-      onSuccess = () => { },  // Callback for successful submission
-      table = null     // Optional DataTable reference
+      formId,
+      modalId,
+      apiRoute,
+      promptMessage,
+      onSuccess = () => { },
+      table = null
 ) => {
       const formElement = document.getElementById(formId);
       const modalElement = document.getElementById(modalId);
@@ -24,16 +24,14 @@ export const handlePrompt = (
             return;
       }
 
-      // Initialize the modal using Bootstrap
       const modal = new bootstrap.Modal(modalElement);
       const datatable = table ? $(table).DataTable() : null;
 
-      // Listen for form submission
-      formElement.addEventListener('submit', async (e) => {
+      // Remove any existing event listener to prevent duplicates
+      const submitHandler = async (e) => {
             e.preventDefault();
 
             try {
-                  // Show confirmation dialog with SweetAlert
                   const confirmResult = await Swal.fire({
                         title: promptMessage,
                         icon: 'warning',
@@ -44,17 +42,15 @@ export const handlePrompt = (
 
                   if (!confirmResult.isConfirmed) return;
 
-                  // Show loading dialog
-                  await Swal.fire({
-                        text: "Processing...",
-                        showConfirmButton: false,
-                        allowEscapeKey: false,
-                        allowOutsideClick: false
-                  });
+                  // await Swal.fire({
+                  //       text: "Processing...",
+                  //       showConfirmButton: false,
+                  //       allowEscapeKey: false,
+                  //       allowOutsideClick: false
+                  // });
 
                   const formData = new FormData(formElement);
 
-                  // Make API request
                   const response = await fetch(apiRoute, {
                         method: 'POST',
                         body: formData,
@@ -63,27 +59,29 @@ export const handlePrompt = (
                         }
                   });
 
-                  const data = await response.json();
+                  let data;
+                  try {
+                        data = await response.json();
+                  } catch (jsonError) {
+                        throw new Error('Failed to parse JSON response');
+                  }
 
                   if (!response.ok) {
                         throw new Error(data.message || 'Submission failed');
                   }
 
-                  // Show success dialog
                   await Swal.fire({
                         text: data.message || 'Operation successful',
                         icon: 'success'
                   });
 
-                  // Hide modal and reset form
                   modal.hide();
+                  $("select").val(null).trigger('change');
                   $(formElement).find('select').val(null).trigger('change');
                   formElement.reset();
 
-                  // Reload DataTable if provided
                   if (datatable) datatable.ajax.reload(false, null);
 
-                  // Call the onSuccess callback
                   onSuccess(data);
 
             } catch (error) {
@@ -93,5 +91,8 @@ export const handlePrompt = (
                         icon: 'error'
                   });
             }
-      });
+      };
+
+      formElement.removeEventListener('submit', submitHandler); // Remove if already exists
+      formElement.addEventListener('submit', submitHandler);     // Add new listener
 };

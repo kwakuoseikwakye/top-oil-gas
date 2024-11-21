@@ -32,7 +32,7 @@ class OrderResource extends JsonResource
             $disabled = 'disabled';
         }
         return [
-            "transid" => $this->transid,
+            "transid" => $this->id,
             "order_id" => $this->order_number,
             "custno" => $this->customer_id,
             "customer" => "{$this->fname} {$this->lname}",

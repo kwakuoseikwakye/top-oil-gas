@@ -124,10 +124,10 @@
         <!--end::Entry-->
     </div>
     {{-- @include('modules.cylinder.modals.file_upload') --}}
-    {{-- @include('modules.cylinder.modals.order_cylinder')
-    @include('modules.cylinder.modals.update_cylinder')
-    @include('modules.cylinder.modals.assign_cylinder')
-    @include('modules.cylinder.modals.update_assign_cylinder') --}}
+    {{-- @include('modules.cylinder.modals.order_cylinder') --}}
+    {{-- @include('modules.cylinder.modals.update_cylinder') --}}
+    @include('modules.orders.modals.assign_cylinder')
+    {{-- @include('modules.cylinder.modals.update_assign_cylinder') --}}
     {{-- @include('modules.cylinder.modals.add_cylinder')
     @include('modules.cylinder.modals.info_assign')
     @include('modules.cylinder.modals.info') --}}

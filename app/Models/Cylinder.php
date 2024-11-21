@@ -8,11 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Cylinder extends Model
 {
     use HasFactory;
-    const CREATED_AT = "createdate";
-    const UPDATED_AT = "modifydate";
 
     protected $table = "cylinders";
-    protected $primaryKey = "transid";
+    protected $primaryKey = "id";
     public $incrementing = false;
     protected $keyType = "string";
 
@@ -34,17 +32,7 @@ class Cylinder extends Model
 
     public function customers()
     {
-        return $this->belongsTo(CustomerCylinder::class, "cylcode", "cylcode");
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, "createuser", "createuser");
-    }
-
-    public function location()
-    {
-        return $this->belongsTo(CustomerLocation::class, 'location_id');
+        return $this->belongsTo(CustomerCylinder::class, "cylcode", "code");
     }
 
     public function cylinderWeight()

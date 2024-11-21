@@ -1,6 +1,10 @@
 {
+  "_prompt-DGZfwLd2.js": {
+    "file": "assets/prompt-DGZfwLd2.js",
+    "name": "prompt"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-Bdhvm1QU.css",
+    "file": "assets/app-TfgtUTKi.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -9,5 +13,23 @@
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
+  },
+  "resources/js/customers/index.js": {
+    "file": "assets/index-DE2VCIX7.js",
+    "name": "index",
+    "src": "resources/js/customers/index.js",
+    "isEntry": true,
+    "imports": [
+      "_prompt-DGZfwLd2.js"
+    ]
+  },
+  "resources/js/orders/index.js": {
+    "file": "assets/index-DZ1AZMPT.js",
+    "name": "index",
+    "src": "resources/js/orders/index.js",
+    "isEntry": true,
+    "imports": [
+      "_prompt-DGZfwLd2.js"
+    ]
   }
 }

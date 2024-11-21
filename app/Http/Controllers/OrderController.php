@@ -25,7 +25,7 @@ class OrderController extends Controller
             'cylinders.code'
         )
             ->join('customers', 'customers.id', 'orders.customer_id')
-            ->join('customer_cylinders', 'customer_cylinders.order_number', 'orders.order_number')
+            ->leftJoin('customer_cylinders', 'customer_cylinders.order_number', 'orders.order_number')
             ->leftJoin('cylinders', 'cylinders.code', 'customer_cylinders.cylcode')
             ->leftJoin('customer_locations', 'customer_locations.id', 'orders.location_id')
             ->leftJoin('pickups', 'pickups.id', 'orders.pickup_location_id')

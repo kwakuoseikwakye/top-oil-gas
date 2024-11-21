@@ -7,6 +7,7 @@ use App\Models\Dispatch;
 use App\Models\Orders;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentService
@@ -32,6 +33,10 @@ class PaymentService
 
                   foreach ($orders as $payment) {
 
+                        if ($payment['status'] == Orders::SUCCESS) {
+                              return apiErrorResponse("This order was successfully paid");
+                        }
+
                         $cylinderSize = CylinderWeights::where('id', $payment['weight_id'])->first();
 
                         if ($cylinderSize) {
@@ -55,18 +60,11 @@ class PaymentService
                   };
 
                   $transactionId = random_int(100000000000, 999999999999);
-                  $username = env("API_USER");
-                  $key = env("API_KEY");
-                  $url = env("APP_URL");
+                  $username = 'ahodwo6551f166e0eaa';
+                  $key = 'OTE1ZDQzZjJiNGJiZmY4OTYwZTA4MjU3NDIyODUwY2U=';
+                  $url = 'https://buildahub.net';
 
-                  Payment::create([
-                        "transaction_id" => $transactionId,
-                        "amount_paid" => $amt,
-                        "order_number" => $orderNumber,
-                        "customer_id" => $user->customer_id,
-                        "status" => Payment::PENDING,
-                        "payment_mode" => "online",
-                  ]);
+
 
                   $credentials = base64_encode($username . ':' . $key);
                   $payload = json_encode([
@@ -105,8 +103,27 @@ class PaymentService
 
                   $url = json_decode($response, true);
 
+                  Log::info('Payment response => ', $url);
+                  if ($url['code'] === 999) {
+                        $desc = $url['description'] ?? 'Payment failed. Unable to initiate payment';
+                        return apiErrorResponse($desc);
+                  }
+
+                  DB::beginTransaction();
+                  Payment::create([
+                        "transaction_id" => $transactionId,
+                        "amount_paid" => $amt,
+                        "order_number" => $orderNumber,
+                        "customer_id" => $user->customer_id,
+                        "status" => Payment::PENDING,
+                        "payment_mode" => "online",
+                  ]);
+                  DB::commit();
+
                   return apiSuccessResponse('Payment initiated', 200, $url);
             } catch (\Exception $e) {
+                  DB::rollBack();
+
                   return apiErrorResponse('Internal error occured', 500, $e);
             }
       }
@@ -115,18 +132,18 @@ class PaymentService
       {
             try {
 
-                  
+
                   $payment  = Payment::where('transaction_id', $transactionId)->first();
-                  
-                  
+
+
                   if (empty($payment)) {
                         Orders::where('order_number', $payment->order_number)->update(['status' => Orders::CANCELLED]);
-                        
+
                         return apiErrorResponse('Invalid transaction id');
                   }
-                  
+
                   DB::beginTransaction();
-                  
+
                   Payment::where('transaction_id', $transactionId)->update(['status' => Payment::SUCCESS]);
                   Orders::where('order_number', $payment->order_number)->update(['status' => Orders::SUCCESS]);
                   Dispatch::where('order_number', $payment->order_number)->update(['status' => Dispatch::PENDING_ASSIGNMENT]);

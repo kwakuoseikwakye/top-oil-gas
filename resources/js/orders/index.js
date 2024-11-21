@@ -40,7 +40,6 @@ var orderTable = $('#order-table').DataTable({
             data: "action"
       },
       ],
-      responsive: true,
       buttons: [{
             extend: 'print',
             attr: {
@@ -191,9 +190,27 @@ var cylinderTable = $('#cylinder-table').DataTable({
       ]
 });
 
+const form = 'assign-cylinder-form';
+const appUrl = `${APP_URL}/api/admin/cylinders/assign`; 
+const modal = 'assign-cylinder-modal';
+const promptMessage = 'Are you sure you want to assign cylinder to customer?';
+$(document).ready(function () {
+      handlePrompt(
+            form,
+            modal,
+            appUrl,
+            promptMessage,
+            (data) => {
+                  console.log('Submission successful:', data);
+            },
+            orderTable
+      );
+});
+
 let cylinders = window.cylinder;
 let lastSelectedRegion = null;
 $("#order-table").on("click", ".assign-cylinder-btn", function () {
+      console.log(cylinders);
       let data = orderTable.row($(this).parents('tr')).data();
 
       $("#assign-cylinder-transid").val(data.transid);
@@ -206,8 +223,8 @@ $("#order-table").on("click", ".assign-cylinder-btn", function () {
       cylinders.forEach(cylinder => {
             if (cylinder.weight_id === data.weight_id) {
                   filteredCylinders.push({
-                        "id": cylinder.cylcode,
-                        "text": cylinder.cylcode
+                        "id": cylinder.code,
+                        "text": cylinder.code
                   });
             }
       });
